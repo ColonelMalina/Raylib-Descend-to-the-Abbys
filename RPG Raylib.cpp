@@ -18,42 +18,24 @@ enum GameState {
     GAME_OVER,
     VICTORY
 };
-
 int main() {
     srand(static_cast<unsigned int>(time(0)));
-    // 1. VIRTUÁLNE ROZLÍŠENIE (Na toto píšeme hru)
     const int gameScreenWidth = 1920;
     const int gameScreenHeight = 1080;
 
-    // 2. NASTAVENIE PRED OTVORENÍM OKNA (Kritické pre stabilitu)
-    // FLAG_VSYNC_HINT - zabráni blikaniu obrazu (synchronizácia s monitorom)
-    // FLAG_WINDOW_UNDECORATED - odstráni lištu okna (nutné pre čistý fullscreen)
-    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_UNDECORATED);
-    InitWindow(gameScreenWidth / 2, gameScreenHeight / 2, "Descend to the Abyss");
+    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_UNDECORATED | FLAG_FULLSCREEN_MODE);
 
-    // Malá pauza, aby se Windows vzpamatovaly
-    for (int i = 0; i < 10; i++) {
-        BeginDrawing();
-        ClearBackground(BLACK);
-        EndDrawing();
-    }
+    InitWindow(0, 0, "Descend to the Abyss");
 
     int monitor = GetCurrentMonitor();
-    int screenW = GetMonitorWidth(monitor);
-    int screenH = GetMonitorHeight(monitor);
-    SetWindowSize(screenW, screenH);
+    SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
 
-    // Ak by monitor nebol v režime fullscreen, prepneme ho
-    if (!IsWindowFullscreen()) ToggleFullscreen();
+    InitAudioDevice();
 
-    // 3. RENDER TARGET (Virtuálne plátno)
-    // Toto plátno zabezpečí, že tvojich 1920x1080 bude vždy vyzerať rovnako
     RenderTexture2D target = LoadRenderTexture(gameScreenWidth, gameScreenHeight);
     SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
-    InitAudioDevice();
-    // ... zbytek tvého načítání (textures, music) ...
 
-    // --- NAČTENÍ POZADÍ PRO PATRA ---
+    //BACKGROUND
     std::map<int, Texture2D> floorBackgrounds;
     floorBackgrounds[1] = LoadTexture("resources/floor1.png");
     floorBackgrounds[2] = LoadTexture("resources/floor2.png");
@@ -66,7 +48,7 @@ int main() {
         std::cout << "CHYBA: Nepodarilo se nacist resources/floor1.png!" << std::endl;
     }
 
-    // --- NAČTENÍ HUDBY PRO PATRA ---
+    //MUSIC
     std::map<int, Music> floorMusic;
     floorMusic[1] = LoadMusicStream("resources/music1.mp3");
     floorMusic[2] = LoadMusicStream("resources/music2.mp3");
@@ -90,10 +72,8 @@ int main() {
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
 
-        // Výpočet měřítka pro roztažení virtuálního plátna na monitor
         float scale = fminf((float)GetScreenWidth() / gameScreenWidth, (float)GetScreenHeight() / gameScreenHeight);
 
-        // --- UPDATE HUDBY ---
         if (currentState == PLAYING) {
             if (currentFloor != lastMusicFloor) {
                 if (lastMusicFloor != 0) StopMusicStream(floorMusic[lastMusicFloor]);
@@ -103,7 +83,7 @@ int main() {
             UpdateMusicStream(floorMusic[currentFloor]);
         }
 
-        // --- LOGIKA HRY ---
+        //GAME LOGIC
         switch (currentState) {
         case TITLE_SCREEN:
             if (IsKeyPressed(KEY_ENTER)) currentState = ENTER_NAME;
@@ -193,7 +173,7 @@ int main() {
             }
             else if (currentFloor == 2) {
                 if (IsKeyPressed(KEY_ONE)) { currentFloor = 1; }
-                if (IsKeyPressed(KEY_TWO) && !clearedLocations[2].count("Rickety Bridge")) { ricketyWoodBridge(*player); currentFloor = 3; clearedLocations[2].insert("Rickety Bridge"); }
+                if (IsKeyPressed(KEY_TWO) && !clearedLocations[2].count("Rickety Bridge")) { ricketyWoodBridge(*player); clearedLocations[2].insert("Rickety Bridge"); }
                 if (IsKeyPressed(KEY_THREE) && !clearedLocations[2].count("Stone Overpass")) { stoneOverpass(*player); currentFloor = 3; clearedLocations[2].insert("Stone Overpass"); }
                 if (IsKeyPressed(KEY_FOUR) && !clearedLocations[2].count("Hidden Ford")) { hiddenFord(*player); currentFloor = 3; clearedLocations[2].insert("Hidden Ford"); }
             }
@@ -229,30 +209,29 @@ int main() {
             break;
         }
         BeginDrawing();
-            ClearBackground(BLACK);
-        // --- KRESLENÍ DO VIRTUÁLNÍHO PLÁTNA ---
+        ClearBackground(BLACK);
+
         BeginTextureMode(target);
         ClearBackground(BLACK);
 
         switch (currentState) {
         case TITLE_SCREEN:
-            DrawText("==========================================================================", 300, 400, 30, DARKGRAY);
-            DrawText("WELCOME TO THE DESCEND TO THE ABYSS", 520, 480, 40, RAYWHITE);
-            DrawText("WILL YOU FIND THE WAY TO THE END?", 580, 560, 30, GRAY);
-            DrawText("OR WILL YOU GET LOST AND DIE...", 620, 640, 35, RED);
-            DrawText("==========================================================================", 300, 720, 30, DARKGRAY);
-            DrawText("Press ENTER to start", 800, 850, 40, YELLOW);
+            DrawText("==========================================================================", 230, 300, 40, DARKGRAY);
+            DrawText("WELCOME TO THE DESCEND TO THE ABYSS", 490, 400, 40, RAYWHITE);
+            DrawText("WILL YOU FIND THE WAY TO THE END?", 580, 500, 35, GRAY);
+            DrawText("OR WILL YOU GET LOST AND DIE...", 660, 600, 30, RED);
+            DrawText("==========================================================================", 230, 700, 40, DARKGRAY);
+            DrawText("Press ENTER to start", 690, 850, 35, YELLOW);
             break;
 
         case ENTER_NAME:
-            DrawText("Enter your hero's name:", 750, 450, 40, RAYWHITE);
+            DrawText("Enter your hero's name:", 710, 450, 40, RAYWHITE);
             DrawRectangle(710, 510, 500, 80, LIGHTGRAY);
             DrawText(nameBuffer, 730, 530, 40, MAROON);
-            DrawText("Press ENTER to confirm", 780, 620, 30, DARKGRAY);
+            DrawText("Press ENTER to confirm", 720, 620, 30, DARKGRAY);
             break;
 
         case PLAYING: {
-            // Pozadí patra
             DrawTexturePro(floorBackgrounds[currentFloor],
                 { 0, 0, (float)floorBackgrounds[currentFloor].width, (float)floorBackgrounds[currentFloor].height },
                 { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
@@ -269,7 +248,7 @@ int main() {
                     battleManager.Draw();
                 }
                 else if (ev.type == EV_WEAPON_CHEST) {
-                    DrawText(("[CHEST] Found: " + ev.weapon.Wname).c_str(), 200, 400, 50, GOLD);
+                    DrawText(("[LOOT] " + ev.weapon.Wname).c_str(), 200, 400, 50, GOLD);
                     DrawText(("Dmg: " + std::to_string((int)ev.weapon.minDamage) + "-" + std::to_string((int)ev.weapon.maxDamage)).c_str(), 200, 480, 40, GREEN);
                     DrawText("Press 1 to EQUIP", 200, 660, 40, RAYWHITE);
                     DrawText("Press 2 to IGNORE", 200, 740, 40, GRAY);
@@ -329,10 +308,10 @@ int main() {
                 DrawText(title, centerX - MeasureText(title, 45) / 2, yPos, 45, RAYWHITE);
                 const char* t1 = "Press 1: [Go Back] Return to Floor 1";
                 DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, GRAY);
-                const char* t2 = "Press 2: [Proceed] Rickety Wood Bridge";
+                const char* t2 = "Press 2: [Explore] Rickety Wood Bridge";
                 DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, LIGHTGRAY);
                 const char* t3 = "Press 3: [Proceed] Stone Overpass";
-                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, YELLOW);
                 const char* t4 = "Press 4: [Proceed] Hidden Ford";
                 DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, YELLOW);
             }
@@ -356,13 +335,13 @@ int main() {
                 const char* t1 = "Press 1: [Go Back] Return to Floor 3";
                 DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, GRAY);
                 const char* t2 = "Press 2: [Proceed] Follow the River of Blood";
-                DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, YELLOW);
                 const char* t3 = "Press 3: [Proceed] Enter the Soul Prison";
-                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, YELLOW);
                 const char* t4 = "Press 4: [Explore] Flesh Wall Corridor";
                 DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, LIGHTGRAY);
                 const char* t5 = "Press 5: [Explore] Bone Catacombs";
-                DrawText(t5, centerX - MeasureText(t5, 40) / 2, yPos += 80, 40, YELLOW);
+                DrawText(t5, centerX - MeasureText(t5, 40) / 2, yPos += 80, 40, LIGHTGRAY);
             }
             else if (currentFloor == 5) {
                 const char* title = "--- FLOOR 5: The Gates of Hell ---";
@@ -393,7 +372,6 @@ int main() {
         }
         EndTextureMode();
 
-        // Vykreslení virtuálního plátna do středu obrazovky se správným měřítkem
         DrawTexturePro(target.texture,
             { 0.0f, 0.0f, (float)target.texture.width, (float)-target.texture.height },
             { (GetScreenWidth() - ((float)gameScreenWidth * scale)) * 0.5f,
@@ -403,7 +381,6 @@ int main() {
         EndDrawing();
     }
 
-    // --- ÚKLID ZDROJŮ ---
     for (int i = 1; i <= 6; i++) {
         UnloadTexture(floorBackgrounds[i]);
         UnloadMusicStream(floorMusic[i]);

@@ -44,7 +44,7 @@ void crystalGrotto(Hero& player) {
     QueueBattle({ new GiantCentipede(), new GiantCentipede() });
     QueueText("A Cave Bat, disturbed by the fight, swoops in!");
     QueueBattle({ new CaveBat() });
-    QueueAction(EV_UPGRADE_MANA, 10);
+    QueueAction(EV_UPGRADE_MANA, 5);
     QueueAction(EV_REGAIN_MANA);
     QueueAction(EV_ADD_POTION, 2);
 }
@@ -102,7 +102,7 @@ void ruinedAltar(Hero& player) {
     QueueText("ENTERING: RUINED ALTAR\nThree suits of Animated Armor wake from their slumber!");
     QueueBattle({ new AnimatedArmor(), new AnimatedArmor() });
     QueueText("The final, massive armor steps forward!");
-    QueueAction(EV_ADD_POTION, 2);
+    QueueAction(EV_ADD_POTION, 1);
     QueueBattle({ new AnimatedArmor() });
     QueueText("The altar grants you the more knowledge for FIREBALL!");
     QueueAction(EV_UPGRADE_FIREBALL);
@@ -125,7 +125,7 @@ void illusionCorridor(Hero& player) {
 void alchemyLab(Hero& player) {
     QueueText("ENTERING: ALCHEMY LAB\nAn Orc is looting the lab, protected by Wraiths!");
     QueueBattle({ new ArcaneWraith(), new ArcaneWraith() });
-    QueueText("You picked up some bandages from table.\nThe Orc charges at you with full force!");
+    QueueText("You see some bandages on the table.\nThe Orc charges at you with full force!");
     QueueAction(EV_HEAL_BANDAGE, 30);
     QueueAction(EV_ADD_POTION, 1);
     QueueBattle({ new Orc() });

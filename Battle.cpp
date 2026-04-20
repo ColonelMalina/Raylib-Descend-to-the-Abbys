@@ -121,7 +121,7 @@ void BattleManager::Update() {
 
 void BattleManager::Draw() {
     if (phase == FINISHED) return;
-
+    DrawRectangle(360, 250, 1200, 500, Fade(BLACK, 0.4f));
     DrawText(("HERO: " + player->getName() + " (HP: " + std::to_string((int)player->getHealth()) + " | MANA: " + std::to_string((int)player->getMana()) + ")").c_str(), 400, 280, 40, GREEN);
 
     int yOffset = 360;
@@ -129,7 +129,7 @@ void BattleManager::Draw() {
         DrawText((enemy->getName() + " - HP: " + std::to_string((int)enemy->getHealth())).c_str(), 1050, yOffset, 40, RED);
         yOffset += 60;
     }
-    DrawRectangle(380, 250, 1200, 500, Fade(BLACK, 0.4f));
+   
     DrawRectangle(380, 550, 1160, 100, Fade(BLACK, 0.6f));
     Color msgColor = RAYWHITE;
 
@@ -138,7 +138,7 @@ void BattleManager::Draw() {
         msgColor = GOLD;
     }
     DrawText(currentMessage.c_str(), 400, 570, 35, msgColor);
-
+    DrawRectangle(380, 760, 1160, 70, Fade(GREEN, 0.6f));
     if (phase == PLAYER_TURN) {
         std::string controls = "[A] Attack  [H] Heal  [P] Potion (" + std::to_string((int)player->gethPotion()) + ")";
         if (player->hasFireball()) controls += "  [F] Fireball";
