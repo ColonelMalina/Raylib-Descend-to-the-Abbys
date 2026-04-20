@@ -12,7 +12,7 @@ public:
     int dotTurns;
     int critChance;
 
-    Weapon(std::string w = "Bare hands", double minD = 5, double maxD = 7, double dotD = 0, int dotT = 0, int critC = 2)
+    Weapon(std::string w = "Pointy stick", double minD = 6, double maxD = 8, double dotD = 0, int dotT = 0, int critC = 2)
         : Wname(w), minDamage(minD), maxDamage(maxD), dotDamage(dotD), dotTurns(dotT), critChance(critC) {}
 
     double getPower() {
@@ -39,3 +39,6 @@ Weapon BigAxe();
 Weapon Elvensword();
 Weapon Edagger();
 Weapon HeavyMace();
+Weapon Scikle();
+Weapon EAxe();
+Weapon Hammer();

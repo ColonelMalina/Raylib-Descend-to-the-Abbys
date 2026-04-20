@@ -235,31 +235,33 @@ int main() {
 
         switch (currentState) {
         case TITLE_SCREEN:
+            
             DrawTexturePro(floorBackgrounds[0], { 0, 0, (float)floorBackgrounds[0].width, (float)floorBackgrounds[0].height }, { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
-            DrawText("==========================================================================", 230, 300, 40, DARKGRAY);
+            DrawRectangle(200, 260, 1520, 650, Fade(BLACK, 0.8f));
+            DrawText("==========================================================================", 225, 300, 40, MAROON);
             DrawText("WELCOME TO THE DESCEND TO THE ABYSS", 490, 400, 40, RAYWHITE);
             DrawText("WILL YOU FIND THE WAY TO THE END?", 580, 500, 35, RAYWHITE);
             DrawText("OR WILL YOU GET LOST AND DIE...", 660, 600, 30, RED);
-            DrawText("==========================================================================", 230, 700, 40, DARKGRAY);
-            DrawRectangle(680,845,420,60,BLACK);
-            DrawText("Press ENTER to start", 690, 850, 35, YELLOW);
+            DrawText("==========================================================================", 225, 700, 40, MAROON);
+            DrawText("Press ENTER to start", 725, 850, 35, YELLOW);
             break;
 
         case CONTROLS_SCREEN:
             DrawTexturePro(floorBackgrounds[0], { 0, 0, (float)floorBackgrounds[0].width, (float)floorBackgrounds[0].height }, { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
-            DrawRectangle(460, 250, 1000, 550, Fade(BLACK, 0.8f));
+            DrawRectangle(450, 260, 1020, 650, Fade(BLACK, 0.8f));
 
-            DrawText("--- HOW TO PLAY ---", 780, 300, 45, GOLD);
-            DrawText("Exploration:", 500, 400, 35, GREEN);
-            DrawText("Use keys [1] - [5] to select locations or proceed.", 500, 450, 30, RAYWHITE);
-
+            DrawText("--- HOW TO PLAY ---", 725, 300, 45, GOLD);
+            DrawText("Exploration:", 500, 370, 35, GREEN);
+            DrawText("Use keys [1] - [5] to select locations or proceed.", 500, 420, 30, RAYWHITE);
+            DrawText("You don't need to go to all rooms.", 500, 470, 30, RAYWHITE);
             DrawText("Combat:", 500, 530, 35, RED);
             DrawText("[A] Attack | [H] Heal | [P] Use Potion", 500, 580, 30, RAYWHITE);
             DrawText("(You can attack after using potion)", 500, 630, 30, GRAY);
             DrawText("[F] Fireball | [I] Icespike (If learned)", 500, 680, 30, RAYWHITE);
-            DrawText("In battle, select target using keys [1], [2]...", 500, 730, 30, LIGHTGRAY);
+            DrawText("(Fireball and Icespike have a chance to do extra effect)", 500, 730, 30, GRAY);
+            DrawText("In battle, select target using keys [1], [2], [3]", 500, 780, 30, LIGHTGRAY);
 
-            DrawText("Press ENTER to start your journey", 680, 850, 35, YELLOW);
+            DrawText("Press ENTER to start your journey", 660, 850, 35, YELLOW);
             break;
 
         case ENTER_NAME:
@@ -290,15 +292,41 @@ int main() {
                     int diffMin = (int)ev.weapon.minDamage - currentMin;
                     int diffMax = (int)ev.weapon.maxDamage - currentMax;
 
-                    DrawRectangle(150, 300, 1620, 500, Fade(DARKGRAY, 0.95f));
-                    DrawText(("[LOOT]: " + ev.weapon.Wname).c_str(), 200, 350, 50, GOLD);
+                    int currentCrit = player->getCurrentWeapon().critChance;
+                    int diffCrit = ev.weapon.critChance - currentCrit;
+
+                    int currentDot = (int)player->getCurrentWeapon().dotDamage;
+                    int diffDot = (int)ev.weapon.dotDamage - currentDot;
+
+                    DrawRectangle(150, 250, 1620, 600, Fade(DARKGRAY, 0.95f)); 
+                    DrawText(("[LOOT]: " + ev.weapon.Wname).c_str(), 200, 280, 50, GOLD);
+
+                    // DAMAGE
                     std::string statsTxt = "New Dmg: " + std::to_string((int)ev.weapon.minDamage) + "-" + std::to_string((int)ev.weapon.maxDamage);
                     std::string compareTxt = " (Change: " + std::string(diffMin >= 0 ? "+" : "") + std::to_string(diffMin) + "/" + std::string(diffMax >= 0 ? "+" : "") + std::to_string(diffMax) + ")";
-                    DrawText((statsTxt + compareTxt).c_str(), 200, 430, 40, (diffMin + diffMax >= 0 ? GREEN : RED));
-                    DrawText(("Current Weapon: " + player->getCurrentWeapon().Wname + " (" + std::to_string(currentMin) + "-" + std::to_string(currentMax) + ")").c_str(), 200, 500, 30, GRAY);
-                    DrawText("Press 1 to EQUIP", 200, 660, 40, RAYWHITE);
-                    DrawText("Press 2 to IGNORE", 200, 740, 40, GRAY);
+                    DrawText((statsTxt + compareTxt).c_str(), 200, 350, 40, (diffMin + diffMax >= 0 ? GREEN : RED));
+
+                    // CRIT CHANCE
+                    std::string critTxt = "Crit Chance: " + std::to_string(ev.weapon.critChance) + "%";
+                    std::string critComp = " (" + std::string(diffCrit >= 0 ? "+" : "") + std::to_string(diffCrit) + "%)";
+                    DrawText((critTxt + critComp).c_str(), 200, 410, 40, (diffCrit >= 0 ? GREEN : RED));
+
+                    // DOT
+                    std::string dotTxt = "DoT: " + std::to_string((int)ev.weapon.dotDamage) + " dmg / " + std::to_string(ev.weapon.dotTurns) + " turns";
+                    std::string dotComp = " (Dmg change: " + std::string(diffDot >= 0 ? "+" : "") + std::to_string(diffDot) + ")";
+                    DrawText((dotTxt + dotComp).c_str(), 200, 470, 40, (diffDot >= 0 ? GREEN : RED));
+
+                    // ACTUAL WEAPON
+                    DrawText(("Current: " + player->getCurrentWeapon().Wname +
+                        " [Dmg: " + std::to_string(currentMin) + "-" + std::to_string(currentMax) +
+                        " | Crit: " + std::to_string(currentCrit) + "%" +
+                        " | DoT: " + std::to_string(currentDot) + "]").c_str(), 200, 550, 30, GRAY);
+
+                    DrawText("Press 1 to EQUIP", 200, 700, 40, RAYWHITE);
+                    DrawText("Press 2 to IGNORE", 200, 770, 40, GRAY);
                 }
+
+                
                 else {
                     std::string infoText = "";
                     if (ev.type == EV_HEAL_BANDAGE) infoText = "You found a bandage and recovered " + std::to_string((int)ev.amount) + " HP!";
@@ -353,7 +381,7 @@ int main() {
                 DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, GRAY);
                 const char* t2 = "Press 2: [Explore] Rickety Wood Bridge";
                 DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, LIGHTGRAY);
-                const char* t3 = "Press 3: [Proceed] Stone Overpass";
+                const char* t3 = "Press 3: [Proceed] Stone Overpass [Learn Fireball]";
                 DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, YELLOW);
                 const char* t4 = "Press 4: [Proceed] Hidden Ford";
                 DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, YELLOW);
@@ -365,7 +393,7 @@ int main() {
                 DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, GRAY);
                 const char* t2 = "Press 2: [Explore] Ruined Altar";
                 DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, LIGHTGRAY);
-                const char* t3 = "Press 3: [Explore] Illusion Corridor";
+                const char* t3 = "Press 3: [Explore] Illusion Corridor [Learn Icespike]";
                 DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, LIGHTGRAY);
                 const char* t4 = "Press 4: [Explore] Alchemy Lab";
                 DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, LIGHTGRAY);

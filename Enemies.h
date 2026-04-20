@@ -79,21 +79,24 @@ public: RabidBear() : Enemies("Rabid Bear", 45, 5, 10) {}
 
 // ================= FLOOR 2: Chasm  =================
 class Goblin : public Enemies {
-public: Goblin() : Enemies("Goblin", 30, 8, 12) {}
+public: Goblin() : Enemies("Goblin", 30, 7, 9) {}
 };
 class ShamGob : public Enemies {
-public: ShamGob() : Enemies("Fire Goblin", 20, 13, 20) {}
+public: ShamGob() : Enemies("Fire Goblin", 20, 13, 18) {}
 };
 class ChasmHarpy : public Enemies {
 public: ChasmHarpy() : Enemies("Chasm Harpy", 38, 7, 13) {}
 };
 class BridgeTroll : public Enemies {
-public: BridgeTroll() : Enemies("Bridge Troll", 45, 9, 16) {}
+public: BridgeTroll() : Enemies("Bridge Troll", 45, 6, 9) {}
 };
 
 // ================= FLOOR 3: Magical Ruins =================
 class AnimatedArmor : public Enemies {
-public: AnimatedArmor() : Enemies("Animated Armor", 50, 10, 16) {}
+public: AnimatedArmor() : Enemies("Animated Armor", 40, 9, 14) {}
+};
+class PAnimatedArmor : public Enemies {
+public: PAnimatedArmor() : Enemies("Plated Animated Armor", 60, 15, 22) {}
 };
 class ArcaneWraith : public Enemies {
 public: ArcaneWraith() : Enemies("Arcane Wraith", 55, 11, 19) {}

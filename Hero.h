@@ -35,7 +35,7 @@ public:
 
         int roll = rand() % 100;
         if (roll < currentW.critChance) {
-            hit *= 1.5;
+            hit *= 1.7;
             log += "*** CRITICAL HIT! ***\n";
         }
         std::vector<std::string> attackMessages = {

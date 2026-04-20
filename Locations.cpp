@@ -12,26 +12,28 @@ void QueueAction(EventType type, double amount) { eventQueue.push_back({ type, "
 // ================= FLOOR 1: THE NATURAL CAVERNS =================
 
 void bearDen(Hero& player) {
-    QueueText("ENTERING: BEAR DEN\nYou hear heavy steps... A Rabid Bear charges!");
-    QueueBattle({ new RabidBear() });
-    QueueAction(EV_HEAL_BANDAGE, 30);
-    QueueText("A giant centipede drops from the ceiling to scavenge the remains!");
+    QueueText("ENTERING: BEAR DEN\n");
+    QueueText("A giant centipede drops from the ceiling to feast on you!");
     QueueBattle({ new GiantCentipede() });
+    QueueAction(EV_HEAL_BANDAGE, 15);
+    QueueText("You hear heavy steps... A Bear charges!");
+    QueueBattle({ new RabidBear() });
     QueueWeapon(Dagger());
     QueueAction(EV_UPGRADE_MANA, 10);
     QueueAction(EV_REGAIN_MANA);
+    QueueAction(EV_HEAL_BANDAGE, 15);
     QueueAction(EV_ADD_POTION, 1);
 }
 
 void undergroundLake(Hero& player) {
-    QueueText("ENTERING: UNDERGROUND LAKE\nA massive swarm of cave creatures attacks from the ceiling!");
+    QueueText("ENTERING: UNDERGROUND LAKE\nA massive swarm of cave creatures attacks from the crevices!");
     QueueBattle({ new CaveBat(), new Rat() });
-    QueueAction(EV_HEAL_BANDAGE, 40);
+    QueueAction(EV_HEAL_BANDAGE, 20);
     QueueText("More creatures emerge from the dark water!");
     QueueBattle({ new CaveBat(), new CaveBat(), new Rat() });
     QueueText("You found a hidden blue herb by the water.");
     QueueAction(EV_UPGRADE_HEAL);
-    QueueAction(EV_FULL_HEAL);
+    QueueAction(EV_HEAL_BANDAGE, 20);
     QueueAction(EV_REGAIN_MANA);
     QueueWeapon(Dagger());
 }
@@ -47,12 +49,13 @@ void crystalGrotto(Hero& player) {
 }
 
 void steepDescent(Hero& player) {
-    QueueText("ENTERING: STEEP DESCENT\nA Goblin and his rat companion block the tunnel down!");
-    QueueBattle({ new Goblin(), new Rat() });
+    QueueText("ENTERING: STEEP DESCENT\nA Goblin and his rat companions block the tunnel down!");
+    QueueBattle({ new Goblin(), new Rat(), new Rat()});
+    QueueAction(EV_HEAL_BANDAGE, 25);
     QueueText("Another Goblin jumps down from a ledge to avenge them!");
     QueueBattle({ new Goblin(), new Goblin() });
     QueueText("You found Dagger dropped by the Goblin.");
-    QueueWeapon(SteelSword());
+    QueueWeapon(Scikle());
 }
 
 // ================= FLOOR 2: THE GREAT CHASM =================
@@ -80,11 +83,12 @@ void stoneOverpass(Hero& player) {
 }
 
 void hiddenFord(Hero& player) {
-    QueueText("ENTERING: HIDDEN FORD\nThe water boils. Three Giant Centipedes emerge!");
-    QueueBattle({ new GiantCentipede(), new GiantCentipede(), new GiantCentipede() });
-    QueueText("The water boils again... Two more arrive!");
+    QueueText("ENTERING: HIDDEN FORD\nThe water boils. Two Giant Centipedes emerge!");
+    QueueBattle({ new GiantCentipede(), new GiantCentipede()});
+    QueueText("The water boils again... Three more arrive!");
+    QueueAction(EV_HEAL_BANDAGE, 15);
     QueueAction(EV_ADD_POTION, 1);
-    QueueBattle({ new GiantCentipede(), new GiantCentipede() });
+    QueueBattle({ new GiantCentipede(), new GiantCentipede(),new GiantCentipede() });
     QueueText("You found a rusty Orish axe in the water.");
     QueueWeapon(OrcAxe());
     QueueAction(EV_UPGRADE_MANA, 10);
@@ -100,7 +104,7 @@ void ruinedAltar(Hero& player) {
     QueueBattle({ new AnimatedArmor(), new AnimatedArmor() });
     QueueText("The final, massive armor steps forward!");
     QueueAction(EV_ADD_POTION, 1);
-    QueueBattle({ new AnimatedArmor() });
+    QueueBattle({ new PAnimatedArmor() });
     QueueText("The altar grants you the more knowledge for FIREBALL!");
     QueueAction(EV_UPGRADE_FIREBALL);
     QueueAction(EV_REGAIN_MANA);
@@ -161,6 +165,7 @@ void fleshWallCorridor(Hero& player) {
     QueueBattle({ new Rat(), new Rat(), new Rat() });
     QueueText("The Flesh Golem finally breaks free and attacks!");
     QueueAction(EV_ADD_POTION, 1);
+    QueueWeapon(EAxe());
     QueueBattle({ new FleshGolem(), new BloodFiend() });
     QueueText("Lots of different spell scrolls are lying around...");
     QueueAction(EV_UPGRADE_ICE);
@@ -187,6 +192,7 @@ void soulPrison(Hero& player) {
     QueueText("The Shaman summons another Fiend to his side!");
     QueueAction(EV_ADD_POTION, 2);
     QueueBattle({ new Orc2(), new BloodFiend() });
+    QueueWeapon(BigAxe());
     QueueAction(EV_UPGRADE_ICE);
     QueueAction(EV_UPGRADE_HEAL);
     QueueAction(EV_REGAIN_MANA);
@@ -200,7 +206,6 @@ void flamingPits(Hero& player) {
     QueueText("Two more leap from the flames!");
     QueueAction(EV_HEAL_BANDAGE, 30);
     QueueBattle({ new Hellhound(), new Hellhound() });
-    QueueWeapon(BigAxe());
     QueueAction(EV_UPGRADE_FIREBALL);
     QueueAction(EV_REGAIN_MANA);
     QueueAction(EV_ADD_POTION, 2);
@@ -220,6 +225,7 @@ void demonicStatues(Hero& player) {
 void abyssalGorge(Hero& player) {
     QueueText("ENTERING: ABYSSAL GORGE\nA lone Dread Knight stands on the edge... and summons Blood Fiends!");
     QueueBattle({ new BloodFiend(), new BloodFiend(), new BloodFiend() });
+    QueueWeapon(Hammer());
     QueueText("The Dread Knight draws his massive sword!");
     QueueBattle({ new DreadKnight() });
     QueueAction(EV_UPGRADE_FIREBALL);
@@ -238,7 +244,7 @@ void blackGate(Hero& player) {
     QueueText("The gate creaks open... The final battle awaits.");
     QueueAction(EV_REGAIN_MANA);
     QueueAction(EV_FULL_HEAL);
-    QueueAction(EV_ADD_POTION, 1);
+    QueueAction(EV_ADD_POTION, 2);
 }
 
 // ================= FLOOR 6: THE FINAL BOSS =================
@@ -246,6 +252,7 @@ void blackGate(Hero& player) {
 void bossRoom(Hero& player) {
     QueueText("ENTERING: THE THRONE OF THE ABYSS\nThe Demon Lord's personal guards attack first!");
     QueueBattle({ new ObsidianGargoyle(), new DreadKnight() });
+    QueueAction(EV_ADD_POTION, 1);
     QueueText("Azazel rises from his throne. 'Enough play...'");
     QueueBattle({ new DemonLord() });
 }
