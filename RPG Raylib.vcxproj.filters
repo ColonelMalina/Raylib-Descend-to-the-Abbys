@@ -48,4 +48,9 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="icon.rc">
+      <Filter>Soubory zdrojů</Filter>
+    </ResourceCompile>
+  </ItemGroup>
 </Project>

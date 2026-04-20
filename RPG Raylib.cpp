@@ -13,11 +13,13 @@
 
 enum GameState {
     TITLE_SCREEN,
+    CONTROLS_SCREEN,
     ENTER_NAME,
     PLAYING,
     GAME_OVER,
     VICTORY
 };
+
 int main() {
     srand(static_cast<unsigned int>(time(0)));
     const int gameScreenWidth = 1920;
@@ -35,8 +37,9 @@ int main() {
     RenderTexture2D target = LoadRenderTexture(gameScreenWidth, gameScreenHeight);
     SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
 
-    //BACKGROUND
+    // BACKGROUNDS
     std::map<int, Texture2D> floorBackgrounds;
+    floorBackgrounds[0] = LoadTexture("resources/menu_bg.png");
     floorBackgrounds[1] = LoadTexture("resources/floor1.png");
     floorBackgrounds[2] = LoadTexture("resources/floor2.png");
     floorBackgrounds[3] = LoadTexture("resources/floor3.png");
@@ -44,12 +47,9 @@ int main() {
     floorBackgrounds[5] = LoadTexture("resources/floor5.png");
     floorBackgrounds[6] = LoadTexture("resources/floor6.png");
 
-    if (floorBackgrounds[1].id == 0) {
-        std::cout << "CHYBA: Nepodarilo se nacist resources/floor1.png!" << std::endl;
-    }
-
-    //MUSIC
+    // MUSIC 
     std::map<int, Music> floorMusic;
+    floorMusic[0] = LoadMusicStream("resources/menu_music.mp3");
     floorMusic[1] = LoadMusicStream("resources/music1.mp3");
     floorMusic[2] = LoadMusicStream("resources/music2.mp3");
     floorMusic[3] = LoadMusicStream("resources/music3.mp3");
@@ -57,7 +57,7 @@ int main() {
     floorMusic[5] = LoadMusicStream("resources/music5.mp3");
     floorMusic[6] = LoadMusicStream("resources/music6.mp3");
 
-    int lastMusicFloor = 0;
+    int lastMusicFloor = -1;
     SetTargetFPS(60);
 
     GameState currentState = TITLE_SCREEN;
@@ -74,18 +74,23 @@ int main() {
 
         float scale = fminf((float)GetScreenWidth() / gameScreenWidth, (float)GetScreenHeight() / gameScreenHeight);
 
-        if (currentState == PLAYING) {
-            if (currentFloor != lastMusicFloor) {
-                if (lastMusicFloor != 0) StopMusicStream(floorMusic[lastMusicFloor]);
-                PlayMusicStream(floorMusic[currentFloor]);
-                lastMusicFloor = currentFloor;
-            }
-            UpdateMusicStream(floorMusic[currentFloor]);
-        }
+        // MUSIC LOGIC
+        int activeMusicIndex = (currentState == PLAYING) ? currentFloor : 0;
 
-        //GAME LOGIC
+        if (activeMusicIndex != lastMusicFloor) {
+            if (lastMusicFloor != -1) StopMusicStream(floorMusic[lastMusicFloor]);
+            PlayMusicStream(floorMusic[activeMusicIndex]);
+            lastMusicFloor = activeMusicIndex;
+        }
+        UpdateMusicStream(floorMusic[activeMusicIndex]);
+
+        //  GAME LOGIC 
         switch (currentState) {
         case TITLE_SCREEN:
+            if (IsKeyPressed(KEY_ENTER)) currentState = CONTROLS_SCREEN;
+            break;
+
+        case CONTROLS_SCREEN:
             if (IsKeyPressed(KEY_ENTER)) currentState = ENTER_NAME;
             break;
 
@@ -104,8 +109,11 @@ int main() {
                 nameBuffer[letterCount] = '\0';
             }
             if (IsKeyPressed(KEY_ENTER) && letterCount > 0) {
+                if (player != nullptr) { delete player; player = nullptr; }
                 player = new Hero(std::string(nameBuffer), 100, 30, 0);
                 player->EquipW(Weapon());
+                currentFloor = 1;
+                clearedLocations.clear();
                 currentState = PLAYING;
             }
         } break;
@@ -144,7 +152,7 @@ int main() {
                         player->EquipW(ev.weapon);
                         eventQueue.erase(eventQueue.begin());
                     }
-                    if (IsKeyPressed(KEY_TWO)) {
+                    else if (IsKeyPressed(KEY_TWO)) {
                         eventQueue.erase(eventQueue.begin());
                     }
                 }
@@ -186,10 +194,10 @@ int main() {
             }
             else if (currentFloor == 4) {
                 if (IsKeyPressed(KEY_ONE)) { currentFloor = 3; }
-                if (IsKeyPressed(KEY_TWO) && !clearedLocations[4].count("Blood River")) { bloodRiver(*player); currentFloor = 5; clearedLocations[4].insert("Blood River"); }
-                if (IsKeyPressed(KEY_THREE) && !clearedLocations[4].count("Soul Prison")) { soulPrison(*player); currentFloor = 5; clearedLocations[4].insert("Soul Prison"); }
-                if (IsKeyPressed(KEY_FOUR) && !clearedLocations[4].count("Flesh Wall")) { fleshWallCorridor(*player); clearedLocations[4].insert("Flesh Wall"); }
-                if (IsKeyPressed(KEY_FIVE) && !clearedLocations[4].count("Bone Catacombs")) { boneCatacombs(*player); clearedLocations[4].insert("Bone Catacombs"); }
+                if (IsKeyPressed(KEY_FOUR) && !clearedLocations[4].count("Blood River")) { bloodRiver(*player); currentFloor = 5; clearedLocations[4].insert("Blood River"); }
+                if (IsKeyPressed(KEY_FIVE) && !clearedLocations[4].count("Soul Prison")) { soulPrison(*player); currentFloor = 5; clearedLocations[4].insert("Soul Prison"); }
+                if (IsKeyPressed(KEY_TWO) && !clearedLocations[4].count("Flesh Wall")) { fleshWallCorridor(*player); clearedLocations[4].insert("Flesh Wall"); }
+                if (IsKeyPressed(KEY_THREE) && !clearedLocations[4].count("Bone Catacombs")) { boneCatacombs(*player); clearedLocations[4].insert("Bone Catacombs"); }
             }
             else if (currentFloor == 5) {
                 if (IsKeyPressed(KEY_ONE)) { currentFloor = 4; }
@@ -204,10 +212,21 @@ int main() {
         } break;
 
         case GAME_OVER:
+            if (IsKeyPressed(KEY_ENTER)) {
+                // RESET HRY
+                letterCount = 0;
+                nameBuffer[0] = '\0';
+                currentState = ENTER_NAME;
+            }
+            if (IsKeyPressed(KEY_ESCAPE)) CloseWindow();
+            break;
+
         case VICTORY:
             if (IsKeyPressed(KEY_ENTER)) CloseWindow();
             break;
         }
+
+        // --- DRAWING ---
         BeginDrawing();
         ClearBackground(BLACK);
 
@@ -216,26 +235,44 @@ int main() {
 
         switch (currentState) {
         case TITLE_SCREEN:
+            DrawTexturePro(floorBackgrounds[0], { 0, 0, (float)floorBackgrounds[0].width, (float)floorBackgrounds[0].height }, { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
             DrawText("==========================================================================", 230, 300, 40, DARKGRAY);
             DrawText("WELCOME TO THE DESCEND TO THE ABYSS", 490, 400, 40, RAYWHITE);
-            DrawText("WILL YOU FIND THE WAY TO THE END?", 580, 500, 35, GRAY);
+            DrawText("WILL YOU FIND THE WAY TO THE END?", 580, 500, 35, RAYWHITE);
             DrawText("OR WILL YOU GET LOST AND DIE...", 660, 600, 30, RED);
             DrawText("==========================================================================", 230, 700, 40, DARKGRAY);
+            DrawRectangle(680,845,420,60,BLACK);
             DrawText("Press ENTER to start", 690, 850, 35, YELLOW);
             break;
 
+        case CONTROLS_SCREEN:
+            DrawTexturePro(floorBackgrounds[0], { 0, 0, (float)floorBackgrounds[0].width, (float)floorBackgrounds[0].height }, { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
+            DrawRectangle(460, 250, 1000, 550, Fade(BLACK, 0.8f));
+
+            DrawText("--- HOW TO PLAY ---", 780, 300, 45, GOLD);
+            DrawText("Exploration:", 500, 400, 35, GREEN);
+            DrawText("Use keys [1] - [5] to select locations or proceed.", 500, 450, 30, RAYWHITE);
+
+            DrawText("Combat:", 500, 530, 35, RED);
+            DrawText("[A] Attack | [H] Heal | [P] Use Potion", 500, 580, 30, RAYWHITE);
+            DrawText("(You can attack after using potion)", 500, 630, 30, GRAY);
+            DrawText("[F] Fireball | [I] Icespike (If learned)", 500, 680, 30, RAYWHITE);
+            DrawText("In battle, select target using keys [1], [2]...", 500, 730, 30, LIGHTGRAY);
+
+            DrawText("Press ENTER to start your journey", 680, 850, 35, YELLOW);
+            break;
+
         case ENTER_NAME:
+            DrawTexturePro(floorBackgrounds[0], { 0, 0, (float)floorBackgrounds[0].width, (float)floorBackgrounds[0].height }, { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
+            DrawRectangle(700, 440, 520, 205, BLACK);
             DrawText("Enter your hero's name:", 710, 450, 40, RAYWHITE);
             DrawRectangle(710, 510, 500, 80, LIGHTGRAY);
             DrawText(nameBuffer, 730, 530, 40, MAROON);
-            DrawText("Press ENTER to confirm", 720, 620, 30, DARKGRAY);
+            DrawText("Press ENTER to confirm", 710, 600, 30, DARKGRAY);
             break;
 
         case PLAYING: {
-            DrawTexturePro(floorBackgrounds[currentFloor],
-                { 0, 0, (float)floorBackgrounds[currentFloor].width, (float)floorBackgrounds[currentFloor].height },
-                { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
-
+            DrawTexturePro(floorBackgrounds[currentFloor], { 0, 0, (float)floorBackgrounds[currentFloor].width, (float)floorBackgrounds[currentFloor].height }, { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
             DrawRectangle(0, 0, gameScreenWidth, gameScreenHeight, Fade(BLACK, 0.4f));
 
             if (!eventQueue.empty()) {
@@ -248,8 +285,17 @@ int main() {
                     battleManager.Draw();
                 }
                 else if (ev.type == EV_WEAPON_CHEST) {
-                    DrawText(("[LOOT] " + ev.weapon.Wname).c_str(), 200, 400, 50, GOLD);
-                    DrawText(("Dmg: " + std::to_string((int)ev.weapon.minDamage) + "-" + std::to_string((int)ev.weapon.maxDamage)).c_str(), 200, 480, 40, GREEN);
+                    int currentMin = (int)player->getCurrentWeapon().minDamage;
+                    int currentMax = (int)player->getCurrentWeapon().maxDamage;
+                    int diffMin = (int)ev.weapon.minDamage - currentMin;
+                    int diffMax = (int)ev.weapon.maxDamage - currentMax;
+
+                    DrawRectangle(150, 300, 1620, 500, Fade(DARKGRAY, 0.95f));
+                    DrawText(("[LOOT]: " + ev.weapon.Wname).c_str(), 200, 350, 50, GOLD);
+                    std::string statsTxt = "New Dmg: " + std::to_string((int)ev.weapon.minDamage) + "-" + std::to_string((int)ev.weapon.maxDamage);
+                    std::string compareTxt = " (Change: " + std::string(diffMin >= 0 ? "+" : "") + std::to_string(diffMin) + "/" + std::string(diffMax >= 0 ? "+" : "") + std::to_string(diffMax) + ")";
+                    DrawText((statsTxt + compareTxt).c_str(), 200, 430, 40, (diffMin + diffMax >= 0 ? GREEN : RED));
+                    DrawText(("Current Weapon: " + player->getCurrentWeapon().Wname + " (" + std::to_string(currentMin) + "-" + std::to_string(currentMax) + ")").c_str(), 200, 500, 30, GRAY);
                     DrawText("Press 1 to EQUIP", 200, 660, 40, RAYWHITE);
                     DrawText("Press 2 to IGNORE", 200, 740, 40, GRAY);
                 }
@@ -267,16 +313,13 @@ int main() {
                     else if (ev.type == EV_UPGRADE_ICE) infoText = "Your freezing power rise!";
                     if (!ev.text.empty()) infoText = ev.text;
 
-                    DrawRectangle(260, 400, 1400, 300, Fade(DARKGRAY, 0.9f));
                     DrawText(infoText.c_str(), 300, 480, 40, RAYWHITE);
                     DrawText("Press ENTER to confirm", 300, 620, 30, YELLOW);
                 }
                 break;
             }
 
-            std::string status = "FLOOR " + std::to_string(currentFloor) + " - Status: " + player->getName() +
-                " (HP: " + std::to_string((int)player->getHealth()) +
-                " Mana: " + std::to_string((int)player->getMana()) + ")";
+            std::string status = "FLOOR " + std::to_string(currentFloor) + " - Status: " + player->getName() + " (HP: " + std::to_string((int)player->getHealth()) + " Mana: " + std::to_string((int)player->getMana()) + ")";
             DrawText(status.c_str(), 100, 50, 40, GREEN);
             DrawLine(100, 110, 1820, 110, DARKGRAY);
 
@@ -328,20 +371,20 @@ int main() {
                 DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, LIGHTGRAY);
                 const char* t5 = "Press 5: [Proceed] Glowing Portal";
                 DrawText(t5, centerX - MeasureText(t5, 40) / 2, yPos += 80, 40, YELLOW);
-            }
+            }          
             else if (currentFloor == 4) {
                 const char* title = "--- FLOOR 4: The Corrupted Depths ---";
                 DrawText(title, centerX - MeasureText(title, 45) / 2, yPos, 45, RAYWHITE);
                 const char* t1 = "Press 1: [Go Back] Return to Floor 3";
-                DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, GRAY);
-                const char* t2 = "Press 2: [Proceed] Follow the River of Blood";
-                DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, YELLOW);
-                const char* t3 = "Press 3: [Proceed] Enter the Soul Prison";
-                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, YELLOW);
-                const char* t4 = "Press 4: [Explore] Flesh Wall Corridor";
-                DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, LIGHTGRAY);
-                const char* t5 = "Press 5: [Explore] Bone Catacombs";
-                DrawText(t5, centerX - MeasureText(t5, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, GRAY);                
+                const char* t2 = "Press 2: [Explore] Flesh Wall Corridor";
+                DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t3 = "Press 3: [Explore] Bone Catacombs";
+                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t4 = "Press 4: [Proceed] Follow the River of Blood";
+                DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, YELLOW);
+                const char* t5 = "Press 5: [Proceed] Enter the Soul Prison";
+                DrawText(t5, centerX - MeasureText(t5, 40) / 2, yPos += 80, 40, YELLOW);
             }
             else if (currentFloor == 5) {
                 const char* title = "--- FLOOR 5: The Gates of Hell ---";
@@ -360,8 +403,11 @@ int main() {
         } break;
 
         case GAME_OVER:
-            DrawText("--- GAME OVER ---", 750, 450, 60, RED);
-            DrawText("Press ENTER to Exit", 820, 550, 40, RAYWHITE);
+            DrawTexturePro(floorBackgrounds[0], { 0, 0, (float)floorBackgrounds[0].width, (float)floorBackgrounds[0].height }, { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
+            DrawRectangle(0, 0, gameScreenWidth, gameScreenHeight, Fade(BLACK, 0.6f));
+            DrawText("--- GAME OVER ---", 615, 450, 60, RED);
+            DrawText("Press ENTER to Try again", 630, 550, 40, RAYWHITE);
+            DrawText("or press ESC to Exit", 710, 600, 35, RAYWHITE);
             break;
 
         case VICTORY:
@@ -372,24 +418,17 @@ int main() {
         }
         EndTextureMode();
 
-        DrawTexturePro(target.texture,
-            { 0.0f, 0.0f, (float)target.texture.width, (float)-target.texture.height },
-            { (GetScreenWidth() - ((float)gameScreenWidth * scale)) * 0.5f,
-              (GetScreenHeight() - ((float)gameScreenHeight * scale)) * 0.5f,
-              (float)gameScreenWidth * scale, (float)gameScreenHeight * scale },
-            { 0, 0 }, 0.0f, WHITE);
+        DrawTexturePro(target.texture, { 0.0f, 0.0f, (float)target.texture.width, (float)-target.texture.height }, { (GetScreenWidth() - ((float)gameScreenWidth * scale)) * 0.5f, (GetScreenHeight() - ((float)gameScreenHeight * scale)) * 0.5f, (float)gameScreenWidth * scale, (float)gameScreenHeight * scale }, { 0, 0 }, 0.0f, WHITE);
         EndDrawing();
     }
-
-    for (int i = 1; i <= 6; i++) {
+    // UNLOADING
+    for (int i = 0; i <= 6; i++) {
         UnloadTexture(floorBackgrounds[i]);
         UnloadMusicStream(floorMusic[i]);
     }
     UnloadRenderTexture(target);
     CloseAudioDevice();
-
     if (player != nullptr) delete player;
     CloseWindow();
-
     return 0;
 }

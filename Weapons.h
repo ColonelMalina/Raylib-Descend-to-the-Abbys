@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <cstdlib> // pro rand()
+#include <cstdlib> 
 
 class Weapon
 {

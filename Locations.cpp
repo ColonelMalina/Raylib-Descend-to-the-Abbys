@@ -14,13 +14,10 @@ void QueueAction(EventType type, double amount) { eventQueue.push_back({ type, "
 void bearDen(Hero& player) {
     QueueText("ENTERING: BEAR DEN\nYou hear heavy steps... A Rabid Bear charges!");
     QueueBattle({ new RabidBear() });
-    QueueText("Its mate was hiding in the shadows!");
-    QueueAction(EV_HEAL_BANDAGE, 30);
-    QueueBattle({ new RabidBear() });
     QueueAction(EV_HEAL_BANDAGE, 30);
     QueueText("A giant centipede drops from the ceiling to scavenge the remains!");
     QueueBattle({ new GiantCentipede() });
-    QueueWeapon(SteelSword());
+    QueueWeapon(Dagger());
     QueueAction(EV_UPGRADE_MANA, 10);
     QueueAction(EV_REGAIN_MANA);
     QueueAction(EV_ADD_POTION, 1);
@@ -44,7 +41,7 @@ void crystalGrotto(Hero& player) {
     QueueBattle({ new GiantCentipede(), new GiantCentipede() });
     QueueText("A Cave Bat, disturbed by the fight, swoops in!");
     QueueBattle({ new CaveBat() });
-    QueueAction(EV_UPGRADE_MANA, 5);
+    QueueAction(EV_UPGRADE_MANA, 10);
     QueueAction(EV_REGAIN_MANA);
     QueueAction(EV_ADD_POTION, 2);
 }
@@ -53,9 +50,9 @@ void steepDescent(Hero& player) {
     QueueText("ENTERING: STEEP DESCENT\nA Goblin and his rat companion block the tunnel down!");
     QueueBattle({ new Goblin(), new Rat() });
     QueueText("Another Goblin jumps down from a ledge to avenge them!");
-    QueueBattle({ new Goblin() });
+    QueueBattle({ new Goblin(), new Goblin() });
     QueueText("You found Dagger dropped by the Goblin.");
-    QueueWeapon(Dagger());
+    QueueWeapon(SteelSword());
 }
 
 // ================= FLOOR 2: THE GREAT CHASM =================

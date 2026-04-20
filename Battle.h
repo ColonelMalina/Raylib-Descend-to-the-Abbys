@@ -8,6 +8,7 @@
 enum BattlePhase {
     STARTING,
     PLAYER_TURN,
+    SELECT_TARGET,
     ENEMY_TURN,
     DISPLAY_MESSAGE,
     VICTORY_STATE,
@@ -16,6 +17,8 @@ enum BattlePhase {
 };
 
 class BattleManager {
+private:
+    int pendingAction = 0;
 public:
     BattleManager();
     

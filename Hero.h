@@ -56,9 +56,9 @@ public:
     }
 
     // FIREBALL
-    double minF = 10;
-    double maxF = 20;
-    double fManaCost = 6;
+    double minF = 15;
+    double maxF = 23;
+    double fManaCost = 8;
     int fireballLevel = 1;
     int dotChance = 20;
 
@@ -85,15 +85,15 @@ public:
 
     void upgradeFireball() {
         fireballLevel++;
-        minF += 4;
-        maxF += 9;
+        minF += 9;
+        maxF += 14;
         fManaCost += 3;
-        dotChance += 15;
+        dotChance += 20;
     }
 
     // ICESPIKE
-    double minI = 7;
-    double maxI = 15;
+    double minI = 12;
+    double maxI = 18;
     double iManaCost = 5;
     int icespikeLevel = 1;
     int freezeChance = 10;
@@ -121,16 +121,16 @@ public:
 
     void upgradeIce() {
         icespikeLevel++;
-        minI += 3;
-        maxI += 7;
+        minI += 8;
+        maxI += 9;
         iManaCost += 2;
         freezeChance += 10;
     }
 
     // HEAL
-    double minH = 5.0;
-    double maxH = 10.0;
-    double hManaCost = 5.0;
+    double minH = 9.0;
+    double maxH = 15.0;
+    double hManaCost = 6.0;
     int healLevel = 1;
     int critChance = 5;
 
@@ -161,10 +161,10 @@ public:
 
     void upgradeHeal() {
         healLevel++;
-        minH += 5;
-        maxH += 8;
+        minH += 6;
+        maxH += 9;
         hManaCost += 2;
-        critChance += 5;
+        critChance += 7;
     }
 
     void addhPotion(double amount) { hPotion += amount; }
