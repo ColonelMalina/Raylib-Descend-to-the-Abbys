@@ -21,10 +21,61 @@ enum GameState {
 
 int main() {
     srand(static_cast<unsigned int>(time(0)));
+    // 1. VIRTUÁLNE ROZLÍŠENIE (Na toto píšeme hru)
+    const int gameScreenWidth = 1920;
+    const int gameScreenHeight = 1080;
 
-    const int screenWidth = 800;
-    const int screenHeight = 600;
-    InitWindow(screenWidth, screenHeight, "Descend to the Abyss - RPG");
+    // 2. NASTAVENIE PRED OTVORENÍM OKNA (Kritické pre stabilitu)
+    // FLAG_VSYNC_HINT - zabráni blikaniu obrazu (synchronizácia s monitorom)
+    // FLAG_WINDOW_UNDECORATED - odstráni lištu okna (nutné pre čistý fullscreen)
+    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_UNDECORATED);
+    InitWindow(gameScreenWidth / 2, gameScreenHeight / 2, "Descend to the Abyss");
+
+    // Malá pauza, aby se Windows vzpamatovaly
+    for (int i = 0; i < 10; i++) {
+        BeginDrawing();
+        ClearBackground(BLACK);
+        EndDrawing();
+    }
+
+    int monitor = GetCurrentMonitor();
+    int screenW = GetMonitorWidth(monitor);
+    int screenH = GetMonitorHeight(monitor);
+    SetWindowSize(screenW, screenH);
+
+    // Ak by monitor nebol v režime fullscreen, prepneme ho
+    if (!IsWindowFullscreen()) ToggleFullscreen();
+
+    // 3. RENDER TARGET (Virtuálne plátno)
+    // Toto plátno zabezpečí, že tvojich 1920x1080 bude vždy vyzerať rovnako
+    RenderTexture2D target = LoadRenderTexture(gameScreenWidth, gameScreenHeight);
+    SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR);
+    InitAudioDevice();
+    // ... zbytek tvého načítání (textures, music) ...
+
+    // --- NAČTENÍ POZADÍ PRO PATRA ---
+    std::map<int, Texture2D> floorBackgrounds;
+    floorBackgrounds[1] = LoadTexture("resources/floor1.png");
+    floorBackgrounds[2] = LoadTexture("resources/floor2.png");
+    floorBackgrounds[3] = LoadTexture("resources/floor3.png");
+    floorBackgrounds[4] = LoadTexture("resources/floor4.png");
+    floorBackgrounds[5] = LoadTexture("resources/floor5.png");
+    floorBackgrounds[6] = LoadTexture("resources/floor6.png");
+
+    if (floorBackgrounds[1].id == 0) {
+        std::cout << "CHYBA: Nepodarilo se nacist resources/floor1.png!" << std::endl;
+    }
+
+    // --- NAČTENÍ HUDBY PRO PATRA ---
+    std::map<int, Music> floorMusic;
+    floorMusic[1] = LoadMusicStream("resources/music1.mp3");
+    floorMusic[2] = LoadMusicStream("resources/music2.mp3");
+    floorMusic[3] = LoadMusicStream("resources/music3.mp3");
+    floorMusic[4] = LoadMusicStream("resources/music4.mp3");
+    floorMusic[5] = LoadMusicStream("resources/music5.mp3");
+    floorMusic[6] = LoadMusicStream("resources/music6.mp3");
+
+    int lastMusicFloor = 0;
     SetTargetFPS(60);
 
     GameState currentState = TITLE_SCREEN;
@@ -37,7 +88,22 @@ int main() {
     BattleManager battleManager;
 
     while (!WindowShouldClose()) {
+        if (IsKeyPressed(KEY_F11)) ToggleFullscreen();
 
+        // Výpočet měřítka pro roztažení virtuálního plátna na monitor
+        float scale = fminf((float)GetScreenWidth() / gameScreenWidth, (float)GetScreenHeight() / gameScreenHeight);
+
+        // --- UPDATE HUDBY ---
+        if (currentState == PLAYING) {
+            if (currentFloor != lastMusicFloor) {
+                if (lastMusicFloor != 0) StopMusicStream(floorMusic[lastMusicFloor]);
+                PlayMusicStream(floorMusic[currentFloor]);
+                lastMusicFloor = currentFloor;
+            }
+            UpdateMusicStream(floorMusic[currentFloor]);
+        }
+
+        // --- LOGIKA HRY ---
         switch (currentState) {
         case TITLE_SCREEN:
             if (IsKeyPressed(KEY_ENTER)) currentState = ENTER_NAME;
@@ -69,7 +135,6 @@ int main() {
                 currentState = GAME_OVER;
                 break;
             }
-
             if (!eventQueue.empty()) {
                 GameEvent& ev = eventQueue.front();
 
@@ -103,17 +168,20 @@ int main() {
                         eventQueue.erase(eventQueue.begin());
                     }
                 }
-                else if (ev.type == EV_HEAL_BANDAGE) { player->bandage(ev.amount); eventQueue.erase(eventQueue.begin()); }
-                else if (ev.type == EV_FULL_HEAL) { player->fullHeal(); eventQueue.erase(eventQueue.begin()); }
-                else if (ev.type == EV_UPGRADE_MANA) { player->upgradeMana(ev.amount); eventQueue.erase(eventQueue.begin()); }
-                else if (ev.type == EV_REGAIN_MANA) { player->regainMana(); eventQueue.erase(eventQueue.begin()); }
-                else if (ev.type == EV_ADD_POTION) { player->addhPotion(ev.amount); eventQueue.erase(eventQueue.begin()); }
-                else if (ev.type == EV_UPGRADE_HEAL) { player->upgradeHeal(); eventQueue.erase(eventQueue.begin()); }
-                else if (ev.type == EV_LEARN_FIREBALL) { player->learnFireball(); eventQueue.erase(eventQueue.begin()); }
-                else if (ev.type == EV_LEARN_ICE) { player->learnIce(); eventQueue.erase(eventQueue.begin()); }
-                else if (ev.type == EV_UPGRADE_FIREBALL) { player->upgradeFireball(); eventQueue.erase(eventQueue.begin()); }
-                else if (ev.type == EV_UPGRADE_ICE) { player->upgradeIce(); eventQueue.erase(eventQueue.begin()); }
+                else if (IsKeyPressed(KEY_ENTER)) {
+                    if (ev.type == EV_HEAL_BANDAGE) { player->bandage(ev.amount); }
+                    else if (ev.type == EV_FULL_HEAL) { player->fullHeal(); }
+                    else if (ev.type == EV_UPGRADE_MANA) { player->upgradeMana(ev.amount); }
+                    else if (ev.type == EV_REGAIN_MANA) { player->regainMana(); }
+                    else if (ev.type == EV_ADD_POTION) { player->addhPotion(ev.amount); }
+                    else if (ev.type == EV_UPGRADE_HEAL) { player->upgradeHeal(); }
+                    else if (ev.type == EV_LEARN_FIREBALL) { player->learnFireball(); }
+                    else if (ev.type == EV_LEARN_ICE) { player->learnIce(); }
+                    else if (ev.type == EV_UPGRADE_FIREBALL) { player->upgradeFireball(); }
+                    else if (ev.type == EV_UPGRADE_ICE) { player->upgradeIce(); }
 
+                    eventQueue.erase(eventQueue.begin());
+                }
                 break;
             }
 
@@ -160,43 +228,69 @@ int main() {
             if (IsKeyPressed(KEY_ENTER)) CloseWindow();
             break;
         }
-
-        // --- DRAWING ---
         BeginDrawing();
+            ClearBackground(BLACK);
+        // --- KRESLENÍ DO VIRTUÁLNÍHO PLÁTNA ---
+        BeginTextureMode(target);
         ClearBackground(BLACK);
 
         switch (currentState) {
         case TITLE_SCREEN:
-            DrawText("============================================", 150, 200, 20, DARKGRAY);
-            DrawText("WELCOME TO THE DESCEND TO THE ABYSS", 160, 240, 20, RAYWHITE);
-            DrawText("WILL YOU FIND THE WAY TO THE END?", 180, 280, 20, GRAY);
-            DrawText("OR WILL YOU GET LOST AND DIE...", 200, 320, 20, RED);
-            DrawText("============================================", 150, 360, 20, DARKGRAY);
-            DrawText("Press ENTER to start", 280, 450, 20, YELLOW);
+            DrawText("==========================================================================", 300, 400, 30, DARKGRAY);
+            DrawText("WELCOME TO THE DESCEND TO THE ABYSS", 520, 480, 40, RAYWHITE);
+            DrawText("WILL YOU FIND THE WAY TO THE END?", 580, 560, 30, GRAY);
+            DrawText("OR WILL YOU GET LOST AND DIE...", 620, 640, 35, RED);
+            DrawText("==========================================================================", 300, 720, 30, DARKGRAY);
+            DrawText("Press ENTER to start", 800, 850, 40, YELLOW);
             break;
 
         case ENTER_NAME:
-            DrawText("Enter your hero's name:", 250, 250, 20, RAYWHITE);
-            DrawRectangle(250, 290, 300, 40, LIGHTGRAY);
-            DrawText(nameBuffer, 260, 300, 20, MAROON);
-            DrawText("Press ENTER to confirm", 250, 350, 20, DARKGRAY);
+            DrawText("Enter your hero's name:", 750, 450, 40, RAYWHITE);
+            DrawRectangle(710, 510, 500, 80, LIGHTGRAY);
+            DrawText(nameBuffer, 730, 530, 40, MAROON);
+            DrawText("Press ENTER to confirm", 780, 620, 30, DARKGRAY);
             break;
 
         case PLAYING: {
+            // Pozadí patra
+            DrawTexturePro(floorBackgrounds[currentFloor],
+                { 0, 0, (float)floorBackgrounds[currentFloor].width, (float)floorBackgrounds[currentFloor].height },
+                { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
+
+            DrawRectangle(0, 0, gameScreenWidth, gameScreenHeight, Fade(BLACK, 0.4f));
+
             if (!eventQueue.empty()) {
                 GameEvent& ev = eventQueue.front();
-
                 if (ev.type == EV_TEXT) {
-                    DrawText(ev.text.c_str(), 100, 250, 20, RAYWHITE);
-                    DrawText("Press ENTER to continue...", 100, 400, 15, GRAY);
+                    DrawText(ev.text.c_str(), 200, 450, 40, RAYWHITE);
+                    DrawText("Press ENTER to continue...", 200, 700, 30, GRAY);
                 }
                 else if (ev.type == EV_BATTLE) {
                     battleManager.Draw();
                 }
                 else if (ev.type == EV_WEAPON_CHEST) {
-                    DrawText(("[CHEST] Found: " + ev.weapon.Wname + "\nDmg: " + std::to_string((int)ev.weapon.minDamage) + "-" + std::to_string((int)ev.weapon.maxDamage)).c_str(), 100, 250, 20, GREEN);
-                    DrawText("Press 1 to EQUIP", 100, 330, 20, RAYWHITE);
-                    DrawText("Press 2 to IGNORE", 100, 370, 20, GRAY);
+                    DrawText(("[CHEST] Found: " + ev.weapon.Wname).c_str(), 200, 400, 50, GOLD);
+                    DrawText(("Dmg: " + std::to_string((int)ev.weapon.minDamage) + "-" + std::to_string((int)ev.weapon.maxDamage)).c_str(), 200, 480, 40, GREEN);
+                    DrawText("Press 1 to EQUIP", 200, 660, 40, RAYWHITE);
+                    DrawText("Press 2 to IGNORE", 200, 740, 40, GRAY);
+                }
+                else {
+                    std::string infoText = "";
+                    if (ev.type == EV_HEAL_BANDAGE) infoText = "You found a bandage and recovered " + std::to_string((int)ev.amount) + " HP!";
+                    else if (ev.type == EV_FULL_HEAL) infoText = "You feel a warm light... HP fully restored!";
+                    else if (ev.type == EV_UPGRADE_MANA) infoText = "You found an ancient scroll! Max Mana increased by " + std::to_string((int)ev.amount) + ".";
+                    else if (ev.type == EV_REGAIN_MANA) infoText = "You rested by the light. Mana restored.";
+                    else if (ev.type == EV_ADD_POTION) infoText = "You found " + std::to_string((int)ev.amount) + " Health Potion(s)!";
+                    else if (ev.type == EV_LEARN_FIREBALL) infoText = "The flames speak to you... You learned FIREBALL!";
+                    else if (ev.type == EV_LEARN_ICE) infoText = "A cold breeze surrounds you... You learned ICESPIKE!";
+                    else if (ev.type == EV_UPGRADE_HEAL) infoText = "Your healing power rise!";
+                    else if (ev.type == EV_UPGRADE_FIREBALL) infoText = "Your fire power rise!";
+                    else if (ev.type == EV_UPGRADE_ICE) infoText = "Your freezing power rise!";
+                    if (!ev.text.empty()) infoText = ev.text;
+
+                    DrawRectangle(260, 400, 1400, 300, Fade(DARKGRAY, 0.9f));
+                    DrawText(infoText.c_str(), 300, 480, 40, RAYWHITE);
+                    DrawText("Press ENTER to confirm", 300, 620, 30, YELLOW);
                 }
                 break;
             }
@@ -204,76 +298,121 @@ int main() {
             std::string status = "FLOOR " + std::to_string(currentFloor) + " - Status: " + player->getName() +
                 " (HP: " + std::to_string((int)player->getHealth()) +
                 " Mana: " + std::to_string((int)player->getMana()) + ")";
-            DrawText(status.c_str(), 50, 30, 20, GREEN);
-            DrawLine(50, 60, 750, 60, DARKGRAY);
+            DrawText(status.c_str(), 100, 50, 40, GREEN);
+            DrawLine(100, 110, 1820, 110, DARKGRAY);
 
             if (clearedLocations.count(currentFloor)) {
                 std::string clearedTxt = "Cleared: ";
                 for (const auto& loc : clearedLocations[currentFloor]) {
                     clearedTxt += "[" + loc + "] ";
                 }
-                DrawText(clearedTxt.c_str(), 50, 70, 15, DARKGRAY);
+                DrawText(clearedTxt.c_str(), 100, 130, 30, DARKGRAY);
             }
 
-            int yPos = 150;
+            int yPos = 300;
+            int centerX = gameScreenWidth / 2;
+
             if (currentFloor == 1) {
-                DrawText("--- FLOOR 1: The Natural Caverns ---", 50, yPos, 20, RAYWHITE);
-                DrawText("Press 1: [Explore] Bear Den", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 2: [Explore] Underground Lake", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 3: [Explore] Crystal Grotto", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 4: [Proceed] Steep Descent", 50, yPos += 40, 20, YELLOW);
+                const char* title = "--- FLOOR 1: The Natural Caverns ---";
+                DrawText(title, centerX - MeasureText(title, 45) / 2, yPos, 45, RAYWHITE);
+                const char* t1 = "Press 1: [Explore] Bear Den";
+                DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t2 = "Press 2: [Explore] Underground Lake";
+                DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t3 = "Press 3: [Explore] Crystal Grotto";
+                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t4 = "Press 4: [Proceed] Steep Descent";
+                DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, YELLOW);
             }
             else if (currentFloor == 2) {
-                DrawText("--- FLOOR 2: The Great Chasm ---", 50, yPos, 20, RAYWHITE);
-                DrawText("Press 1: [Go Back] Return to Floor 1", 50, yPos += 40, 20, GRAY);
-                DrawText("Press 2: [Proceed] Rickety Wood Bridge", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 3: [Proceed] Stone Overpass", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 4: [Proceed] Hidden Ford", 50, yPos += 40, 20, YELLOW);
+                const char* title = "--- FLOOR 2: The Great Chasm ---";
+                DrawText(title, centerX - MeasureText(title, 45) / 2, yPos, 45, RAYWHITE);
+                const char* t1 = "Press 1: [Go Back] Return to Floor 1";
+                DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, GRAY);
+                const char* t2 = "Press 2: [Proceed] Rickety Wood Bridge";
+                DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t3 = "Press 3: [Proceed] Stone Overpass";
+                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t4 = "Press 4: [Proceed] Hidden Ford";
+                DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, YELLOW);
             }
             else if (currentFloor == 3) {
-                DrawText("--- FLOOR 3: The Forgotten Ruins ---", 50, yPos, 20, RAYWHITE);
-                DrawText("Press 1: [Go Back] Return to Floor 2", 50, yPos += 40, 20, GRAY);
-                DrawText("Press 2: [Explore] Ruined Altar", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 3: [Explore] Illusion Corridor", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 4: [Explore] Alchemy Lab", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 5: [Proceed] Glowing Portal", 50, yPos += 40, 20, YELLOW);
+                const char* title = "--- FLOOR 3: The Forgotten Ruins ---";
+                DrawText(title, centerX - MeasureText(title, 45) / 2, yPos, 45, RAYWHITE);
+                const char* t1 = "Press 1: [Go Back] Return to Floor 2";
+                DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, GRAY);
+                const char* t2 = "Press 2: [Explore] Ruined Altar";
+                DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t3 = "Press 3: [Explore] Illusion Corridor";
+                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t4 = "Press 4: [Explore] Alchemy Lab";
+                DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t5 = "Press 5: [Proceed] Glowing Portal";
+                DrawText(t5, centerX - MeasureText(t5, 40) / 2, yPos += 80, 40, YELLOW);
             }
             else if (currentFloor == 4) {
-                DrawText("--- FLOOR 4: The Corrupted Depths ---", 50, yPos, 20, RAYWHITE);
-                DrawText("Press 1: [Go Back] Return to Floor 3", 50, yPos += 40, 20, GRAY);
-                DrawText("Press 2: [Proceed] Follow the River of Blood", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 3: [Proceed] Enter the Soul Prison", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 4: [Explore] Flesh Wall Corridor", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 5: [Explore] Bone Catacombs", 50, yPos += 40, 20, YELLOW);
+                const char* title = "--- FLOOR 4: The Corrupted Depths ---";
+                DrawText(title, centerX - MeasureText(title, 45) / 2, yPos, 45, RAYWHITE);
+                const char* t1 = "Press 1: [Go Back] Return to Floor 3";
+                DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, GRAY);
+                const char* t2 = "Press 2: [Proceed] Follow the River of Blood";
+                DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t3 = "Press 3: [Proceed] Enter the Soul Prison";
+                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t4 = "Press 4: [Explore] Flesh Wall Corridor";
+                DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t5 = "Press 5: [Explore] Bone Catacombs";
+                DrawText(t5, centerX - MeasureText(t5, 40) / 2, yPos += 80, 40, YELLOW);
             }
             else if (currentFloor == 5) {
-                DrawText("--- FLOOR 5: The Gates of Hell ---", 50, yPos, 20, RAYWHITE);
-                DrawText("Press 1: [Go Back] Return to Floor 4", 50, yPos += 40, 20, GRAY);
-                DrawText("Press 2: [Explore] Flaming Pits", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 3: [Explore] Demonic Statues", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 4: [Explore] Abyssal Gorge", 50, yPos += 40, 20, LIGHTGRAY);
-                DrawText("Press 5: [BOSS GATE] Black Gate", 50, yPos += 40, 20, RED);
+                const char* title = "--- FLOOR 5: The Gates of Hell ---";
+                DrawText(title, centerX - MeasureText(title, 45) / 2, yPos, 45, RAYWHITE);
+                const char* t1 = "Press 1: [Go Back] Return to Floor 4";
+                DrawText(t1, centerX - MeasureText(t1, 40) / 2, yPos += 80, 40, GRAY);
+                const char* t2 = "Press 2: [Explore] Flaming Pits";
+                DrawText(t2, centerX - MeasureText(t2, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t3 = "Press 3: [Explore] Demonic Statues";
+                DrawText(t3, centerX - MeasureText(t3, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t4 = "Press 4: [Explore] Abyssal Gorge";
+                DrawText(t4, centerX - MeasureText(t4, 40) / 2, yPos += 80, 40, LIGHTGRAY);
+                const char* t5 = "Press 5: [BOSS GATE] Black Gate";
+                DrawText(t5, centerX - MeasureText(t5, 40) / 2, yPos += 80, 40, RED);
             }
-
         } break;
 
         case GAME_OVER:
-            DrawText("--- GAME OVER ---", 300, 250, 30, RED);
-            DrawText("Press ENTER to Exit", 320, 300, 20, RAYWHITE);
+            DrawText("--- GAME OVER ---", 750, 450, 60, RED);
+            DrawText("Press ENTER to Exit", 820, 550, 40, RAYWHITE);
             break;
 
         case VICTORY:
-            DrawText("*** CONGRATULATIONS! ***", 220, 200, 30, GOLD);
-            DrawText("YOU HAVE CONQUERED THE ABYSS!", 180, 250, 30, YELLOW);
-            DrawText("Press ENTER to Exit", 320, 350, 20, RAYWHITE);
+            DrawText("*** CONGRATULATIONS! ***", 620, 400, 60, GOLD);
+            DrawText("YOU HAVE CONQUERED THE ABYSS!", 580, 500, 50, YELLOW);
+            DrawText("Press ENTER to Exit", 820, 650, 40, RAYWHITE);
             break;
         }
+        EndTextureMode();
 
+        // Vykreslení virtuálního plátna do středu obrazovky se správným měřítkem
+        DrawTexturePro(target.texture,
+            { 0.0f, 0.0f, (float)target.texture.width, (float)-target.texture.height },
+            { (GetScreenWidth() - ((float)gameScreenWidth * scale)) * 0.5f,
+              (GetScreenHeight() - ((float)gameScreenHeight * scale)) * 0.5f,
+              (float)gameScreenWidth * scale, (float)gameScreenHeight * scale },
+            { 0, 0 }, 0.0f, WHITE);
         EndDrawing();
     }
+
+    // --- ÚKLID ZDROJŮ ---
+    for (int i = 1; i <= 6; i++) {
+        UnloadTexture(floorBackgrounds[i]);
+        UnloadMusicStream(floorMusic[i]);
+    }
+    UnloadRenderTexture(target);
+    CloseAudioDevice();
 
     if (player != nullptr) delete player;
     CloseWindow();
 
     return 0;
-};
+}

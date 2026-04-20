@@ -24,7 +24,7 @@ public:
     std::string takeDamage(double amount) {
         Health -= amount;
         if (Health < 0) Health = 0;
-        return Name + " takes " + std::to_string((int)amount) + " damage! Remaining HP: " + std::to_string((int)Health);
+        return Name + " takes " + std::to_string((int)amount) + " damage!";
     }
     double attackHero() {
         return getAttackPower();

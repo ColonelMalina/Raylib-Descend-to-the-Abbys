@@ -173,7 +173,7 @@ public:
         if (hPotion > 0) {
             hPotion--;
             health += 30;
-            if (health > 100) health = 100;
+            if (health > 100) health = maxHealth;
             return "You drank a Health Potion! Recovered 30 HP.\nPotions left: " + std::to_string((int)hPotion);
         }
         return "No potions left!";

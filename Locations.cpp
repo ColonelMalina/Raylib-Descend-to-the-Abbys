@@ -29,7 +29,7 @@ void bearDen(Hero& player) {
 void undergroundLake(Hero& player) {
     QueueText("ENTERING: UNDERGROUND LAKE\nA massive swarm of cave creatures attacks from the ceiling!");
     QueueBattle({ new CaveBat(), new Rat() });
-    QueueAction(EV_FULL_HEAL);
+    QueueAction(EV_HEAL_BANDAGE, 40);
     QueueText("More creatures emerge from the dark water!");
     QueueBattle({ new CaveBat(), new CaveBat(), new Rat() });
     QueueText("You found a hidden blue herb by the water.");
@@ -165,6 +165,7 @@ void fleshWallCorridor(Hero& player) {
     QueueText("The Flesh Golem finally breaks free and attacks!");
     QueueAction(EV_ADD_POTION, 1);
     QueueBattle({ new FleshGolem(), new BloodFiend() });
+    QueueText("Lots of different spell scrolls are lying around...");
     QueueAction(EV_UPGRADE_ICE);
     QueueAction(EV_UPGRADE_HEAL);
     QueueAction(EV_REGAIN_MANA);
