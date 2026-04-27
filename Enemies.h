@@ -63,7 +63,7 @@ public:
     double getHealth() { return Health; }
 };
 
-// ================= FLOOR 1: Caves  =================
+// KÁVES
 class CaveBat : public Enemies {
 public: CaveBat() : Enemies("Cave Bat", 10, 2, 4) {}
 };
@@ -77,7 +77,7 @@ class RabidBear : public Enemies {
 public: RabidBear() : Enemies("Rabid Bear", 45, 5, 10) {}
 };
 
-// ================= FLOOR 2: Chasm  =================
+// USTI
 class Goblin : public Enemies {
 public: Goblin() : Enemies("Goblin", 30, 7, 9) {}
 };
@@ -91,7 +91,7 @@ class BridgeTroll : public Enemies {
 public: BridgeTroll() : Enemies("Bridge Troll", 45, 6, 9) {}
 };
 
-// ================= FLOOR 3: Magical Ruins =================
+// MAGICAL RUINA
 class AnimatedArmor : public Enemies {
 public: AnimatedArmor() : Enemies("Animated Armor", 40, 9, 14) {}
 };
@@ -99,35 +99,37 @@ class PAnimatedArmor : public Enemies {
 public: PAnimatedArmor() : Enemies("Plated Animated Armor", 60, 15, 22) {}
 };
 class ArcaneWraith : public Enemies {
-public: ArcaneWraith() : Enemies("Arcane Wraith", 55, 11, 19) {}
+public: ArcaneWraith() : Enemies("Arcane Wraith", 50, 11, 15) {}
 };
 class Orc : public Enemies {
-public: Orc() : Enemies("Orc", 60, 13, 31) {}
+public: Orc() : Enemies("Orc", 53, 13, 20) {}
 };
-
-// ================= FLOOR 4: Demonic Corruption =================
+class COrc : public Enemies {
+public: COrc() : Enemies("Orc Commander", 60, 18, 27) {}
+};
+// DEMONICKA KORUPCE 
 class Orc2 : public Enemies {
-public: Orc2() : Enemies("Demonic Warlock", 40, 25, 40) {}
+public: Orc2() : Enemies("Demonic Warlock", 40, 25, 35) {}
 };
 class BloodFiend : public Enemies {
-public: BloodFiend() : Enemies("Blood Fiend", 70, 18, 28) {}
+public: BloodFiend() : Enemies("Blood Fiend", 66, 18, 25) {}
 };
 class FleshGolem : public Enemies {
-public: FleshGolem() : Enemies("Flesh Golem", 80, 15, 22) {}
+public: FleshGolem() : Enemies("Flesh Golem", 80, 15, 19) {}
 };
 
-// ================= FLOOR 5: Gates of the Abyss =================
+// GATES OF THE ABBYS
 class Hellhound : public Enemies {
-public: Hellhound() : Enemies("Hellhound", 100, 22, 35) {}
+public: Hellhound() : Enemies("Hellhound", 100, 18, 30) {}
 };
 class DreadKnight : public Enemies {
-public: DreadKnight() : Enemies("Dread Knight", 120, 22, 32) {}
+public: DreadKnight() : Enemies("Dread Knight", 120, 15, 29) {}
 };
 class ObsidianGargoyle : public Enemies {
 public: ObsidianGargoyle() : Enemies("Obsidian Gargoyle", 140, 20, 30) {}
 };
 
-// ================= FLOOR 6: FINAL BOSS =================
+// BOSS
 class DemonLord : public Enemies {
 public: DemonLord() : Enemies("Demon Lord Azazel", 300, 28, 35) {}
 };

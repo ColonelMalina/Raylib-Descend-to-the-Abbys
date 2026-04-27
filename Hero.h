@@ -56,11 +56,11 @@ public:
     }
 
     // FIREBALL
-    double minF = 15;
-    double maxF = 23;
-    double fManaCost = 8;
+    double minF = 25;
+    double maxF = 30;
+    double fManaCost = 10;
     int fireballLevel = 1;
-    int dotChance = 20;
+    int dotChance = 40;
 
     std::string Fireball(Enemies& target, bool& success) {
         if (Mana < fManaCost) {
@@ -87,16 +87,16 @@ public:
         fireballLevel++;
         minF += 9;
         maxF += 14;
-        fManaCost += 3;
+        fManaCost += 4;
         dotChance += 20;
     }
 
     // ICESPIKE
-    double minI = 12;
-    double maxI = 18;
-    double iManaCost = 5;
+    double minI = 26;
+    double maxI = 31;
+    double iManaCost = 8;
     int icespikeLevel = 1;
-    int freezeChance = 10;
+    int freezeChance = 15;
 
     std::string Icespike(Enemies& target, bool& success) {
         if (Mana < iManaCost) {
@@ -204,5 +204,25 @@ public:
     void upgradeMana(double amount) {
         maxMana += amount;
         Mana = maxMana;
+    }
+
+    struct SpellInfo {
+        std::string name;
+        int manaCost;
+        int minDamage;
+        int maxDamage;
+        int level;
+    };
+
+    SpellInfo getFireballInfo() {
+        return { "Fireball", (int)fManaCost, (int)minF, (int)maxF, fireballLevel };
+    }
+
+    SpellInfo getIcespikeInfo() {
+        return { "Icespike", (int)iManaCost, (int)minI, (int)maxI, icespikeLevel };
+    }
+
+    SpellInfo getHealInfo() {
+        return { "Heal", (int)hManaCost, (int)minH, (int)maxH, healLevel };
     }
 };

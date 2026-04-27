@@ -9,8 +9,6 @@ void QueueBattle(std::vector<Enemies*> enemies) { eventQueue.push_back({ EV_BATT
 void QueueWeapon(Weapon w) { eventQueue.push_back({ EV_WEAPON_CHEST, "", {}, w, 0 }); }
 void QueueAction(EventType type, double amount) { eventQueue.push_back({ type, "", {}, Weapon(), amount }); }
 
-// ================= FLOOR 1: THE NATURAL CAVERNS =================
-
 void bearDen(Hero& player) {
     QueueText("ENTERING: BEAR DEN\n");
     QueueText("A giant centipede drops from the ceiling to feast on you!");
@@ -45,20 +43,18 @@ void crystalGrotto(Hero& player) {
     QueueBattle({ new CaveBat() });
     QueueAction(EV_UPGRADE_MANA, 10);
     QueueAction(EV_REGAIN_MANA);
-    QueueAction(EV_ADD_POTION, 2);
+    QueueAction(EV_ADD_POTION, 3);
 }
 
 void steepDescent(Hero& player) {
     QueueText("ENTERING: STEEP DESCENT\nA Goblin and his rat companions block the tunnel down!");
     QueueBattle({ new Goblin(), new Rat(), new Rat()});
     QueueAction(EV_HEAL_BANDAGE, 25);
-    QueueText("Another Goblin jumps down from a ledge to avenge them!");
+    QueueText("Another Goblins jumps down from a ledge to avenge them!");
     QueueBattle({ new Goblin(), new Goblin() });
     QueueText("You found Dagger dropped by the Goblin.");
     QueueWeapon(Scikle());
 }
-
-// ================= FLOOR 2: THE GREAT CHASM =================
 
 void ricketyWoodBridge(Hero& player) {
     QueueText("ENTERING: RICKETY BRIDGE\nHarpies swoop down as you try to cross!");
@@ -67,7 +63,7 @@ void ricketyWoodBridge(Hero& player) {
     QueueAction(EV_ADD_POTION, 1);
     QueueBattle({ new ChasmHarpy(), new ChasmHarpy() });
     QueueWeapon(SteelSword());
-    QueueAction(EV_ADD_POTION, 1);
+    QueueAction(EV_ADD_POTION, 2);
 }
 
 void stoneOverpass(Hero& player) {
@@ -75,29 +71,29 @@ void stoneOverpass(Hero& player) {
     QueueBattle({ new BridgeTroll(), new Goblin(), new Goblin() });
     QueueText("More Goblins rush from the other side of the bridge!");
     QueueBattle({ new Goblin(), new ShamGob() });
-    QueueText("You absorbed the essence of the Fire Goblin and learned FIREBALL!");
+    QueueText("You absorbed the essence of the Fire Goblin!");
+    QueueAction(EV_LEARN_FIREBALL);
     QueueWeapon(HeavyMace());
+    QueueAction(EV_HEAL_BANDAGE, 20);
     QueueAction(EV_UPGRADE_HEAL);
     QueueAction(EV_REGAIN_MANA);
-    QueueAction(EV_LEARN_FIREBALL);
+    
 }
 
 void hiddenFord(Hero& player) {
     QueueText("ENTERING: HIDDEN FORD\nThe water boils. Two Giant Centipedes emerge!");
     QueueBattle({ new GiantCentipede(), new GiantCentipede()});
-    QueueText("The water boils again... Three more arrive!");
     QueueAction(EV_HEAL_BANDAGE, 15);
     QueueAction(EV_ADD_POTION, 1);
+    QueueText("The water boils again... Three more arrive!");
     QueueBattle({ new GiantCentipede(), new GiantCentipede(),new GiantCentipede() });
     QueueText("You found a rusty Orish axe in the water.");
     QueueWeapon(OrcAxe());
     QueueAction(EV_UPGRADE_MANA, 10);
     QueueAction(EV_FULL_HEAL);
     QueueAction(EV_REGAIN_MANA);
-    QueueAction(EV_ADD_POTION, 1);
+    QueueAction(EV_ADD_POTION, 2);
 }
-
-// ================= FLOOR 3: THE FORGOTTEN RUINS =================
 
 void ruinedAltar(Hero& player) {
     QueueText("ENTERING: RUINED ALTAR\nThree suits of Animated Armor wake from their slumber!");
@@ -113,11 +109,12 @@ void ruinedAltar(Hero& player) {
 void illusionCorridor(Hero& player) {
     QueueText("ENTERING: ILLUSION CORRIDOR\nThe shadows twist into four Arcane Wraiths!");
     QueueBattle({ new ArcaneWraith(), new ArcaneWraith() });
-    QueueText("Two more Wraiths materialize from the walls!");
     QueueAction(EV_HEAL_BANDAGE, 30);
+    QueueText("Two more Wraiths materialize from the walls!");
     QueueBattle({ new ArcaneWraith(), new ArcaneWraith() });
-    QueueText("You absorbed the essence from wraiths and learned ICESPIKE!");
+    QueueText("You absorbed the essence from wraiths!");
     QueueWeapon(Edagger());
+    QueueAction(EV_ADD_POTION, 1);
     QueueAction(EV_UPGRADE_FIREBALL);
     QueueAction(EV_REGAIN_MANA);
     QueueAction(EV_LEARN_ICE);
@@ -126,9 +123,10 @@ void illusionCorridor(Hero& player) {
 void alchemyLab(Hero& player) {
     QueueText("ENTERING: ALCHEMY LAB\nAn Orc is looting the lab, protected by Wraiths!");
     QueueBattle({ new ArcaneWraith(), new ArcaneWraith() });
-    QueueText("You see some bandages on the table.\nThe Orc charges at you with full force!");
+    QueueText("You see some bandages on the table.");
     QueueAction(EV_HEAL_BANDAGE, 30);
     QueueAction(EV_ADD_POTION, 1);
+    QueueText("The Orc charges at you with full force!");
     QueueBattle({ new Orc() });
     QueueAction(EV_UPGRADE_FIREBALL);
     QueueAction(EV_UPGRADE_MANA, 15);
@@ -139,34 +137,34 @@ void alchemyLab(Hero& player) {
 void glowingPortal(Hero& player) {
     QueueText("ENTERING: GLOWING PORTAL\nA massive Goblin squad guards the portal!");
     QueueBattle({ new Goblin(), new Goblin(), new Goblin() });
+    QueueAction(EV_ADD_POTION, 2);
     QueueText("The Orc Commander steps through the portal to face you!");
-    QueueAction(EV_ADD_POTION, 1);
-    QueueBattle({ new Orc() });
+    QueueBattle({ new COrc() });
     QueueWeapon(OrcAxe());
     QueueAction(EV_UPGRADE_FIREBALL);
     QueueAction(EV_REGAIN_MANA);
 }
 
-// ================= FLOOR 4: THE CORRUPTED DEPTHS =================
-
 void bloodRiver(Hero& player) {
     QueueText("ENTERING: BLOOD RIVER\nA pack of Blood Fiends is drinking from the river!");
     QueueBattle({ new BloodFiend(), new BloodFiend() });
-    QueueText("More Fiends crawl out of the bloody water!");
     QueueAction(EV_HEAL_BANDAGE, 30);
+    QueueText("More Fiends crawl out of the bloody water!");
     QueueBattle({ new BloodFiend(), new BloodFiend() });
     QueueWeapon(Elvensword());
+    QueueAction(EV_ADD_POTION, 2);
     QueueAction(EV_UPGRADE_HEAL);
     QueueAction(EV_REGAIN_MANA);
 }
 
 void fleshWallCorridor(Hero& player) {
     QueueText("ENTERING: FLESH WALL\nA Flesh Golem bursts from the wall, releasing a swarm of rats!");
-    QueueBattle({ new Rat(), new Rat(), new Rat() });
-    QueueText("The Flesh Golem finally breaks free and attacks!");
-    QueueAction(EV_ADD_POTION, 1);
+    QueueBattle({ new Rat(), new Rat(), new Rat(), new Rat(), new Rat()});
+    QueueAction(EV_ADD_POTION, 2);
+    QueueText("There's heavy looking axe on the floor");
     QueueWeapon(EAxe());
-    QueueBattle({ new FleshGolem(), new BloodFiend() });
+    QueueText("The Flesh Golem finally breaks free and attacks!");
+    QueueBattle({ new FleshGolem(), new Rat(), new Rat() });
     QueueText("Lots of different spell scrolls are lying around...");
     QueueAction(EV_UPGRADE_ICE);
     QueueAction(EV_UPGRADE_HEAL);
@@ -177,6 +175,7 @@ void fleshWallCorridor(Hero& player) {
 void boneCatacombs(Hero& player) {
     QueueText("ENTERING: BONE CATACOMBS\nA Warlock is leading a patrol!");
     QueueBattle({ new Orc(), new Orc() });
+    QueueAction(EV_ADD_POTION, 1);
     QueueText("The Orc Warlock unleashes his dark magic!");
     QueueBattle({ new Orc2() });
     QueueText("There's a lot of scrools lying around!");
@@ -197,8 +196,6 @@ void soulPrison(Hero& player) {
     QueueAction(EV_UPGRADE_HEAL);
     QueueAction(EV_REGAIN_MANA);
 }
-
-// ================= FLOOR 5: THE GATES OF HELL =================
 
 void flamingPits(Hero& player) {
     QueueText("ENTERING: FLAMING PITS\nA pack of four Hellhounds surrounds you!");
@@ -246,8 +243,6 @@ void blackGate(Hero& player) {
     QueueAction(EV_FULL_HEAL);
     QueueAction(EV_ADD_POTION, 2);
 }
-
-// ================= FLOOR 6: THE FINAL BOSS =================
 
 void bossRoom(Hero& player) {
     QueueText("ENTERING: THE THRONE OF THE ABYSS\nThe Demon Lord's personal guards attack first!");

@@ -1,14 +1,11 @@
 #include "Battle.h"
 #include "raylib.h"
 #include <map>
+#include <algorithm> 
 
-// Pomocné proměnné pro sledování stavů hráče
-static int playerBurn = 0;
-static int playerFreeze = 0;
+int playerBurn = 0; static int playerFreeze = 0;
 
-BattleManager::BattleManager() : player(nullptr), phase(FINISHED), messageTimer(0), active(false) {}
-
-void BattleManager::Start(Hero* p, std::vector<Enemies*> e) {
+BattleManager::BattleManager() : player(nullptr), phase(FINISHED), messageTimer(0), active(false) {}void BattleManager::Start(Hero* p, std::vector<Enemies*> e) {
     player = p;
     enemies = e;
     phase = PLAYER_TURN;
@@ -16,12 +13,10 @@ void BattleManager::Start(Hero* p, std::vector<Enemies*> e) {
     messageTimer = 1.0f;
     active = true;
 
-    // Reset stavů na začátku bitvy
-    playerBurn = 0;
-    playerFreeze = 0;
-}
 
-void BattleManager::Update() {
+    //playerBurn = 0;
+    //playerFreeze = 0;
+}void BattleManager::Update() {
     if (phase == FINISHED) return;
 
     if (messageTimer > 0) {
@@ -31,19 +26,19 @@ void BattleManager::Update() {
     switch (phase) {
     case PLAYER_TURN:
         if (messageTimer <= 0) {
-            if (playerBurn > 0) {
-                player->takeDamage(5);
-                playerBurn--;
-                addMessage("Burning hurts! -5 HP");
-                if (player->getHealth() <= 0) { phase = DEFEAT_STATE; return; }
-            }
+            //if (playerBurn > 0) {
+            //    player->takeDamage(5);
+            //    playerBurn--;
+            //    addMessage("Burning hurts! -5 HP");
+            //    if (player->getHealth() <= 0) { phase = DEFEAT_STATE; return; }
+            //}
 
-            if (playerFreeze > 0) {
-                playerFreeze--;
-                addMessage("You are frozen and skip a turn!");
-                phase = DISPLAY_MESSAGE;
-                return;
-            }
+            //if (playerFreeze > 0) {
+            //    playerFreeze--;
+            //    addMessage("You are frozen and skip a turn!");
+            //    phase = DISPLAY_MESSAGE;
+            //    return;
+            //}
             if (IsKeyPressed(KEY_A)) { pendingAction = 1; phase = SELECT_TARGET; }
             else if (IsKeyPressed(KEY_H)) {
                 bool success = false;
@@ -63,7 +58,8 @@ void BattleManager::Update() {
         for (int i = 0; i < (int)enemies.size(); i++) {
             if (IsKeyPressed(KEY_ONE + i)) {
                 std::string log = "";
-                bool success = false;
+                bool success = true; 
+
                 if (pendingAction == 1) {
                     log = player->Attack(*enemies[i]);
                 }
@@ -74,11 +70,16 @@ void BattleManager::Update() {
                     log = player->Icespike(*enemies[i], success);
                 }
 
-                addMessage(log);
-                phase = DISPLAY_MESSAGE;
+                if (success) {
+                    addMessage(log);
+                    phase = DISPLAY_MESSAGE;
+                } else {
+                    phase = PLAYER_TURN;
+                    pendingAction = 0;
+                }
             }
         }
-        if (IsKeyPressed(KEY_ESCAPE)) phase = PLAYER_TURN;
+        if (IsKeyPressed(KEY_FOUR)) phase = PLAYER_TURN;
         break;
 
     case DISPLAY_MESSAGE:
@@ -103,25 +104,25 @@ void BattleManager::Update() {
 
             for (auto* e : enemies) {
                 if (e->getHealth() > 0) {
-                    // DoT poškození pro nepřítele
                     std::string dotMsg = e->takeDotDamage();
                     if (!dotMsg.empty()) {
                         enemyLog += dotMsg + "\n";
                     }
-
-                    // Kontrola zmrazení nepřítele
-                    if (e->isFrozen()) {
-                        enemyLog += e->getName() + " is frozen and skips turn!\n";
-                        continue;
-                    }
-
-                    // Útok nepřítele, pokud přežil DoT
-                    if (e->getHealth() > 0) {
-                        double dmg = e->attackHero();
-                        player->takeDamage(dmg);
-                        enemyLog += e->getName() + " hits for " + std::to_string((int)dmg) + " dmg!\n";
-                    }
                 }
+            }
+
+            enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
+                [](Enemies* e) { return e->getHealth() <= 0; }), enemies.end());
+
+            for (auto* e : enemies) {
+                if (e->isFrozen()) {
+                    enemyLog += e->getName() + " is frozen and skips turn!\n";
+                    continue;
+                }
+
+                double dmg = e->attackHero();
+                player->takeDamage(dmg);
+                enemyLog += e->getName() + " hits for " + std::to_string((int)dmg) + " dmg!\n";
             }
 
             addMessage(enemyLog);
@@ -141,38 +142,63 @@ void BattleManager::Update() {
 
 void BattleManager::Draw() {
     if (phase == FINISHED) return;
-    DrawRectangle(360, 250, 1200, 500, Fade(BLACK, 0.4f));
+    DrawRectangle(360, 250, 1200, 615, Fade(BLACK, 0.4f));
     DrawText(("HERO: " + player->getName() + " (HP: " + std::to_string((int)player->getHealth()) + " | MANA: " + std::to_string((int)player->getMana()) + ")").c_str(), 400, 280, 40, GREEN);
 
-    int yOffset = 360;
+    // Spell Info
+    int spellInfoY = 320;
+    int spellInfoX = 400;
+    int spellInfoSpacing = 230;
+    int spellInfoIdx = 0;
+
+    // Heal Info
+    Hero::SpellInfo healInfo = player->getHealInfo();
+    std::string healBattle = "[H] " + healInfo.name + ": " + std::to_string(healInfo.manaCost) + " Mana";
+    DrawText(healBattle.c_str(), spellInfoX + spellInfoIdx * spellInfoSpacing, spellInfoY, 22, LIME);
+    spellInfoIdx++;
+
+    // Fireball Info
+    if (player->hasFireball()) {
+        Hero::SpellInfo fireInfo = player->getFireballInfo();
+        std::string fireBattle = "[F] " + fireInfo.name + ": " + std::to_string(fireInfo.manaCost) + " Mana";
+        DrawText(fireBattle.c_str(), spellInfoX + spellInfoIdx * spellInfoSpacing, spellInfoY, 22, ORANGE);
+        spellInfoIdx++;
+    }
+
+    // Icespike Info
+    if (player->hasIce()) {
+        Hero::SpellInfo iceInfo = player->getIcespikeInfo();
+        std::string iceBattle = "[I] " + iceInfo.name + ": " + std::to_string(iceInfo.manaCost) + " Mana";
+        DrawText(iceBattle.c_str(), spellInfoX + spellInfoIdx * spellInfoSpacing, spellInfoY, 22, SKYBLUE);
+    }
+
+    int yOffset = 380;
     for (auto* e : enemies) {
         Color eCol = RED;
         std::string status = "";
-        // Zde by bylo ideální mít v Enemies.h metody pro zjištění aktivních stavů pro UI, 
-        // ale pro zachování funkčnosti v rámci Battle.cpp můžeme stav odvodit z barev:
-        DrawText((e->getName() + " - HP: " + std::to_string((int)e->getHealth())).c_str(), 1050, yOffset, 40, eCol);
+        DrawText((e->getName() + " - HP: " + std::to_string((int)e->getHealth())).c_str(), 900, yOffset, 40, eCol);
         yOffset += 60;
     }
 
-    DrawRectangle(380, 550, 1160, 100, Fade(BLACK, 0.6f));
+    DrawRectangle(380, 550, 1160, 290, Fade(BLACK, 0.6f));
     DrawText(currentMessage.c_str(), 400, 570, 35, RAYWHITE);
 
     if (phase == PLAYER_TURN) {
         std::string controls = "[A] Attack  [H] Heal  [P] Potion (" + std::to_string((int)player->gethPotion()) + ")";
         if (player->hasFireball()) controls += "  [F] Fireball";
         if (player->hasIce()) controls += "  [I] Icespike";
-        DrawText(controls.c_str(), 400, 770, 30, YELLOW);
+        DrawText(controls.c_str(), 400, 870, 30, YELLOW);
     }
 
     if (phase == SELECT_TARGET) {
-        DrawText("SELECT TARGET (Press 1, 2... or ESC to back)", 400, 770, 30, ORANGE);
+        DrawText("SELECT TARGET (Press 1, 2, 3 or 4 to go back)", 400, 870, 30, ORANGE);
     }
 
     if (phase == VICTORY_STATE) {
-        DrawText("VICTORY! Press ENTER to continue.", 400, 770, 40, GOLD);
+        DrawText("VICTORY! Press ENTER to continue.", 400, 870, 40, GOLD);
     }
     if (phase == DEFEAT_STATE) {
-        DrawText("YOU DIED! Press ENTER to exit.", 400, 770, 40, RED);
+        DrawText("YOU DIED! Press ENTER to exit.", 400, 870, 40, RED);
     }
 }
 

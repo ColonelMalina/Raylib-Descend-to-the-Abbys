@@ -13,13 +13,13 @@ Weapon OrcAxe() {
     return Weapon("Orcish Axe", 15, 28, 4, 2, 5);
 }
 Weapon HeavyMace() {
-    return Weapon("Heavy Mace", 22, 32, 5, 2, 15);
+    return Weapon("Heavy Mace", 25, 32, 5, 2, 15);
 }
 Weapon Edagger() {
     return Weapon("Enchanted Dagger", 18, 23, 6, 3, 33);
 }
 Weapon EAxe() {
-    return Weapon("Executioner's Axe", 25, 26, 0, 0, 25);
+    return Weapon("Executioner's Axe", 26, 27, 0, 0, 25);
 }
 Weapon Elvensword() {
     return Weapon("Elven Sword", 30, 35, 10, 2, 8);

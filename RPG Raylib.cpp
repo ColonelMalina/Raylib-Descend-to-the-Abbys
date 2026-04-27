@@ -25,7 +25,7 @@ int main() {
     const int gameScreenWidth = 1920;
     const int gameScreenHeight = 1080;
 
-    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_UNDECORATED | FLAG_FULLSCREEN_MODE);
+    SetConfigFlags(FLAG_VSYNC_HINT);
 
     InitWindow(0, 0, "Descend to the Abyss");
 
@@ -177,34 +177,55 @@ int main() {
                 if (IsKeyPressed(KEY_ONE) && !clearedLocations[1].count("Bear Den")) { bearDen(*player); clearedLocations[1].insert("Bear Den"); }
                 if (IsKeyPressed(KEY_TWO) && !clearedLocations[1].count("Underground Lake")) { undergroundLake(*player); clearedLocations[1].insert("Underground Lake"); }
                 if (IsKeyPressed(KEY_THREE) && !clearedLocations[1].count("Crystal Grotto")) { crystalGrotto(*player); clearedLocations[1].insert("Crystal Grotto"); }
-                if (IsKeyPressed(KEY_FOUR)) { steepDescent(*player); clearedLocations[1].insert("Steep Descent"); currentFloor = 2; }
+                if (IsKeyPressed(KEY_FOUR)) {
+                    if (!clearedLocations[1].count("Steep Descent")) { steepDescent(*player); clearedLocations[1].insert("Steep Descent"); }
+                    currentFloor = 2;
+                }
             }
             else if (currentFloor == 2) {
                 if (IsKeyPressed(KEY_ONE)) { currentFloor = 1; }
                 if (IsKeyPressed(KEY_TWO) && !clearedLocations[2].count("Rickety Bridge")) { ricketyWoodBridge(*player); clearedLocations[2].insert("Rickety Bridge"); }
-                if (IsKeyPressed(KEY_THREE) && !clearedLocations[2].count("Stone Overpass")) { stoneOverpass(*player); currentFloor = 3; clearedLocations[2].insert("Stone Overpass"); }
-                if (IsKeyPressed(KEY_FOUR) && !clearedLocations[2].count("Hidden Ford")) { hiddenFord(*player); currentFloor = 3; clearedLocations[2].insert("Hidden Ford"); }
+                if (IsKeyPressed(KEY_THREE)) {
+                    if (!clearedLocations[2].count("Stone Overpass")) { stoneOverpass(*player); clearedLocations[2].insert("Stone Overpass"); }
+                    currentFloor = 3;
+                }
+                if (IsKeyPressed(KEY_FOUR)) {
+                    if (!clearedLocations[2].count("Hidden Ford")) { hiddenFord(*player); clearedLocations[2].insert("Hidden Ford"); }
+                    currentFloor = 3;
+                }
             }
             else if (currentFloor == 3) {
                 if (IsKeyPressed(KEY_ONE)) { currentFloor = 2; }
                 if (IsKeyPressed(KEY_TWO) && !clearedLocations[3].count("Ruined Altar")) { ruinedAltar(*player); clearedLocations[3].insert("Ruined Altar"); }
                 if (IsKeyPressed(KEY_THREE) && !clearedLocations[3].count("Illusion Corridor")) { illusionCorridor(*player); clearedLocations[3].insert("Illusion Corridor"); }
                 if (IsKeyPressed(KEY_FOUR) && !clearedLocations[3].count("Alchemy Lab")) { alchemyLab(*player); clearedLocations[3].insert("Alchemy Lab"); }
-                if (IsKeyPressed(KEY_FIVE)) { glowingPortal(*player); currentFloor = 4; clearedLocations[3].insert("Glowing Portal"); }
+                if (IsKeyPressed(KEY_FIVE)) {
+                    if (!clearedLocations[3].count("Glowing Portal")) { glowingPortal(*player); clearedLocations[3].insert("Glowing Portal"); }
+                    currentFloor = 4;
+                }
             }
             else if (currentFloor == 4) {
                 if (IsKeyPressed(KEY_ONE)) { currentFloor = 3; }
-                if (IsKeyPressed(KEY_FOUR) && !clearedLocations[4].count("Blood River")) { bloodRiver(*player); currentFloor = 5; clearedLocations[4].insert("Blood River"); }
-                if (IsKeyPressed(KEY_FIVE) && !clearedLocations[4].count("Soul Prison")) { soulPrison(*player); currentFloor = 5; clearedLocations[4].insert("Soul Prison"); }
                 if (IsKeyPressed(KEY_TWO) && !clearedLocations[4].count("Flesh Wall")) { fleshWallCorridor(*player); clearedLocations[4].insert("Flesh Wall"); }
                 if (IsKeyPressed(KEY_THREE) && !clearedLocations[4].count("Bone Catacombs")) { boneCatacombs(*player); clearedLocations[4].insert("Bone Catacombs"); }
+                if (IsKeyPressed(KEY_FOUR)) {
+                    if (!clearedLocations[4].count("Blood River")) { bloodRiver(*player); clearedLocations[4].insert("Blood River"); }
+                    currentFloor = 5;
+                }
+                if (IsKeyPressed(KEY_FIVE)) {
+                    if (!clearedLocations[4].count("Soul Prison")) { soulPrison(*player); clearedLocations[4].insert("Soul Prison"); }
+                    currentFloor = 5;
+                }
             }
             else if (currentFloor == 5) {
                 if (IsKeyPressed(KEY_ONE)) { currentFloor = 4; }
                 if (IsKeyPressed(KEY_TWO) && !clearedLocations[5].count("Flaming Pits")) { flamingPits(*player); clearedLocations[5].insert("Flaming Pits"); }
                 if (IsKeyPressed(KEY_THREE) && !clearedLocations[5].count("Demonic Statues")) { demonicStatues(*player); clearedLocations[5].insert("Demonic Statues"); }
                 if (IsKeyPressed(KEY_FOUR) && !clearedLocations[5].count("Abyssal Gorge")) { abyssalGorge(*player); clearedLocations[5].insert("Abyssal Gorge"); }
-                if (IsKeyPressed(KEY_FIVE)) { blackGate(*player); currentFloor = 6; clearedLocations[5].insert("Black Gate"); }
+                if (IsKeyPressed(KEY_FIVE)) {
+                    if (!clearedLocations[5].count("Black Gate")) { blackGate(*player); clearedLocations[5].insert("Black Gate"); }
+                    currentFloor = 6;
+                }
             }
             else if (currentFloor == 6) {
                 bossRoom(*player);
@@ -213,7 +234,6 @@ int main() {
 
         case GAME_OVER:
             if (IsKeyPressed(KEY_ENTER)) {
-                // RESET HRY
                 letterCount = 0;
                 nameBuffer[0] = '\0';
                 currentState = ENTER_NAME;
@@ -226,7 +246,7 @@ int main() {
             break;
         }
 
-        // --- DRAWING ---
+        // DRAWING 
         BeginDrawing();
         ClearBackground(BLACK);
 
@@ -243,14 +263,14 @@ int main() {
             DrawText("WILL YOU FIND THE WAY TO THE END?", 580, 500, 35, RAYWHITE);
             DrawText("OR WILL YOU GET LOST AND DIE...", 660, 600, 30, RED);
             DrawText("==========================================================================", 225, 700, 40, MAROON);
-            DrawText("Press ENTER to start", 725, 850, 35, YELLOW);
+            DrawText("Press ENTER to start", 730, 850, 35, YELLOW);
             break;
 
         case CONTROLS_SCREEN:
             DrawTexturePro(floorBackgrounds[0], { 0, 0, (float)floorBackgrounds[0].width, (float)floorBackgrounds[0].height }, { 0, 0, (float)gameScreenWidth, (float)gameScreenHeight }, { 0,0 }, 0, WHITE);
             DrawRectangle(450, 260, 1020, 650, Fade(BLACK, 0.8f));
 
-            DrawText("--- HOW TO PLAY ---", 725, 300, 45, GOLD);
+            DrawText("--- HOW TO PLAY ---", 720, 300, 45, GOLD);
             DrawText("Exploration:", 500, 370, 35, GREEN);
             DrawText("Use keys [1] - [5] to select locations or proceed.", 500, 420, 30, RAYWHITE);
             DrawText("You don't need to go to all rooms.", 500, 470, 30, RAYWHITE);
@@ -261,7 +281,7 @@ int main() {
             DrawText("(Fireball and Icespike have a chance to do extra effect)", 500, 730, 30, GRAY);
             DrawText("In battle, select target using keys [1], [2], [3]", 500, 780, 30, LIGHTGRAY);
 
-            DrawText("Press ENTER to start your journey", 660, 850, 35, YELLOW);
+            DrawText("Press ENTER to start your journey", 655, 850, 35, YELLOW);
             break;
 
         case ENTER_NAME:
@@ -287,16 +307,16 @@ int main() {
                     battleManager.Draw();
                 }
                 else if (ev.type == EV_WEAPON_CHEST) {
-                    int currentMin = (int)player->getCurrentWeapon().minDamage;
-                    int currentMax = (int)player->getCurrentWeapon().maxDamage;
-                    int diffMin = (int)ev.weapon.minDamage - currentMin;
-                    int diffMax = (int)ev.weapon.maxDamage - currentMax;
+                    int currentMin = player->getCurrentWeapon().minDamage;
+                    int currentMax = player->getCurrentWeapon().maxDamage;
+                    int diffMin = ev.weapon.minDamage - currentMin;
+                    int diffMax = ev.weapon.maxDamage - currentMax;
 
                     int currentCrit = player->getCurrentWeapon().critChance;
                     int diffCrit = ev.weapon.critChance - currentCrit;
 
-                    int currentDot = (int)player->getCurrentWeapon().dotDamage;
-                    int diffDot = (int)ev.weapon.dotDamage - currentDot;
+                    int currentDot = player->getCurrentWeapon().dotDamage;
+                    int diffDot = ev.weapon.dotDamage - currentDot;
 
                     DrawRectangle(150, 250, 1620, 600, Fade(DARKGRAY, 0.95f)); 
                     DrawText(("[LOOT]: " + ev.weapon.Wname).c_str(), 200, 280, 50, GOLD);
@@ -449,7 +469,6 @@ int main() {
         DrawTexturePro(target.texture, { 0.0f, 0.0f, (float)target.texture.width, (float)-target.texture.height }, { (GetScreenWidth() - ((float)gameScreenWidth * scale)) * 0.5f, (GetScreenHeight() - ((float)gameScreenHeight * scale)) * 0.5f, (float)gameScreenWidth * scale, (float)gameScreenHeight * scale }, { 0, 0 }, 0.0f, WHITE);
         EndDrawing();
     }
-    // UNLOADING
     for (int i = 0; i <= 6; i++) {
         UnloadTexture(floorBackgrounds[i]);
         UnloadMusicStream(floorMusic[i]);

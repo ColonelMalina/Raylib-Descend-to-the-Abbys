@@ -6,17 +6,17 @@ class Weapon
 {
 public:
     std::string Wname;
-    double minDamage;
-    double maxDamage;
-    double dotDamage;
+    int minDamage;
+    int maxDamage;
+    int dotDamage;
     int dotTurns;
     int critChance;
 
-    Weapon(std::string w = "Pointy stick", double minD = 6, double maxD = 8, double dotD = 0, int dotT = 0, int critC = 2)
+    Weapon(std::string w = "Pointy stick", int minD = 6, int maxD = 8, int dotD = 2, int dotT = 2, int critC = 2)
         : Wname(w), minDamage(minD), maxDamage(maxD), dotDamage(dotD), dotTurns(dotT), critChance(critC) {}
 
-    double getPower() {
-        double range = maxDamage - minDamage;
+    int getPower() {
+        int range = maxDamage - minDamage;
         return minDamage + (rand() % (int)(range + 1));
     }
     double getWeaponScore() const {
